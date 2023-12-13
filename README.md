@@ -12,7 +12,7 @@ Keyboards with at least 3x6 and having at least three thumb keys in an arc on th
 - [Bastardkb Scylla](https://bastardkb.com/product/scylla-prebuilt-preorder-2/)
   - Extra number row
   - Extra thumb keys
-- [Bastardkb Dilemma Max]([https://bastardkb.com/product/dilemma-max-prebuilt-preorder/](https://bastardkb.com/product/dilemma-max-prebuilt-preorder/))
+- [Bastardkb Dilemma Max](https://bastardkb.com/product/dilemma-max-prebuilt-preorder/)
   - Flat (no concave keywells to reduce travel distance). On the one hand, this is not as ideal from a purely functional perspective. On the other hand, it makes transporting it when traveling much easier.
   - Extra number row
   - Extra rotary encoders
