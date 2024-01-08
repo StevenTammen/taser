@@ -53,6 +53,6 @@ return
 
 ; Need to allow for >= and <= and == and != given = autospacing
 
-; Don't delete space before : if oneKeyBack was Space. So can do like `public class AmrTaskService : IAmrTaskService`
+; Don't delete space before : if one_key_back was Space. So can do like `public class AmrTaskService : IAmrTaskService`
 ; Still need to delete normally though, because of myFunc(): in Python
 ; Also ternary operator like (condition) ? onething : anotherThing

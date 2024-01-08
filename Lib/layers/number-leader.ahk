@@ -5,184 +5,184 @@
 ;-------------------------------------------------
 
 left_top_pinky_extension_num() {
-    return tab()
+    return toggle_code()
 }
 
 left_top_pinky_num() {
-    return open_bracket()
+    return back_slash()
 }
 
 left_top_ring_num() {
-    return close_bracket()
+    return colon()
 }
 
 left_top_middle_num() {
-    return open_brace()
+    return number_lock_nine()
 }
 
 left_top_index_num() {
-    return close_brace()
+    return hyphen()
 }
 
 left_top_index_extension_num() {
-    return single_quotes()
+    return asterisk()
 }
 
 ; Right Top
 ;-------------------------------------------------
 
 right_top_index_extension_num() {
-    return percent_sign()
+    return forward_slash()
 }
 
 right_top_index_num() {
-    return back_slash()
+    return number_lock_eight()
 }
 
 right_top_middle_num() {
-    return hyphen()
+    return dot()
 }
 
 right_top_ring_num() {
-    return asterisk()
+    return percent_sign()
 }
 
 right_top_pinky_num() {
-    return plus_sign()
+    return number_sign()
 }
 
 right_top_pinky_extension_num() {
-    return caret()
+    return backtick()
 }
 
 ; Left Middle
 ;-------------------------------------------------
 
 left_middle_pinky_extension_num() {
-    return tilde()
+    return toggle_prose()
 }
 
 left_middle_pinky_num() {
-    return one()
+    return number_lock_one()
 }
 
 left_middle_ring_num() {
-    return three()
+    return number_lock_three()
 }
 
 left_middle_middle_num() {
-    return five()
+    return number_lock_five()
 }
 
 left_middle_index_num() {
-    return seven()
+    return number_lock_seven()
 }
 
 left_middle_index_extension_num() {
-    return dot()
+    return plus_sign()
 }
 
 ; Right Middle
 ;-------------------------------------------------
 
 right_middle_index_extension_num() {
-    return eight()
+    return dollar_sign()
 }
 
 right_middle_index_num() {
-    return zero()
+    return number_lock_zero()
 }
 
 right_middle_middle_num() {
-    return six()
+    return number_lock_six()
 }
 
 right_middle_ring_num() {
-    return four()
+    return number_lock_four()
 }
 
 right_middle_pinky_num() {
-    return two()
+    return number_lock_two()
 }
 
 right_middle_pinky_extension_num() {
-    return forward_slash()
+    return tilde()
 }
 
 ; Left Bottom
 ;-------------------------------------------------
 
 left_bottom_pinky_extension_num() {
-    return number_sign()
+    return command_leader()
 }
 
 left_bottom_pinky_num() {
-    return dollar_sign()
+    return open_brace()
 }
 
 left_bottom_ring_num() {
-    return quotes()
+    return close_brace()
 }
 
 left_bottom_middle_num() {
-    return close_parenthesis()
+    return open_bracket()
 }
 
 left_bottom_index_num() {
-    return comma()
+    return close_bracket()
 }
 
 left_bottom_index_extension_num() {
-    return open_parenthesis()
+    return caret()
 }
 
 ; Right Bottom
 ;-------------------------------------------------
 
 right_bottom_index_extension_num() {
-    return nine()
+    return ampersand()
 }
 
 right_bottom_index_num() {
-    return equal_sign()
-}
-
-right_bottom_middle_num() {
-    return less_than()
-}
-
-right_bottom_ring_num() {
-    return greater_than()
-}
-
-right_bottom_pinky_num() {
     return pipe()
 }
 
+right_bottom_middle_num() {
+    return equal_sign()
+}
+
+right_bottom_ring_num() {
+    return less_than()
+}
+
+right_bottom_pinky_num() {
+    return greater_than()
+}
+
 right_bottom_pinky_extension_num() {
-    return ampersand()
+    return caps_leader()
 }
 
 ; Left Thumbs
 ;-------------------------------------------------
 
 left_thumb_inner_num() {
-    return double_press_num_layer()
+    return actions_leader()
 }
 
 left_thumb_neutral_num() {
-    return space()
+    return base_lock()
 }
 
 left_thumb_outer_num() {
-    return nav_layer_down()
+    return selection_lock()
 }
 
 ; Right Thumbs
 ;-------------------------------------------------
 
 right_thumb_outer_num() {
-    return enter()
+    return number_leader()
 }
 
 right_thumb_neutral_num() {
@@ -190,5 +190,5 @@ right_thumb_neutral_num() {
 }
 
 right_thumb_inner_num() {
-    return colon()
+    return shift_leader()
 }
