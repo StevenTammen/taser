@@ -39,10 +39,10 @@ global code_language := "python"
 ; implement it both ways, and then make it toggleable
 global manually_automatching := True
 
-; We store the current stack of characters to match as a string stack
-; (last character in string = top of stack). Used in implementing
+; We store the current set of characters to match as an array stack
+; (last character in array = top of stack). Used in implementing
 ; intelligent automatching behavior with the ) key
-global automatching := ""
+global automatching_stack := []
 
 ; Layer Variables
 ;-------------------------------------------------
@@ -50,12 +50,12 @@ global automatching := ""
 ; For tracking what I call layer leader behavior.
 ; Compare one shot keys in QMK firmware: https://docs.qmk.fm/#/one_shot_keys
 ; Possible values: {"shift", "caps", "number", "command", "function", "actions"}
-leader = ""
+global leader = ""
 
 ; For tracking what I call layer lock behavior.
 ; Compare layers in QMK firmware: https://docs.qmk.fm/#/feature_layers
 ; Possible values: {"base", "caps", "number", "function", "actions", "selection"}
-locked = ""
+global locked = ""
 
 ; State Variables
 ;-------------------------------------------------
@@ -84,10 +84,10 @@ global mod_shift_down := False
 ;-------------------------------------------------
 
 ; For tracking automatching state X keypresses back. Used in implementing intelligent backspacing behavior
-global automatching_stack := []
+global automatching_state_history_stack := []
 
 ; For tracking autospacing state X key presses back. Used in implementing intelligent backspacing behavior
-global autospacing_stack := []
+global autospacing_state_history_stack := []
 
 ; For tracking how to undo sent keys X key presses back. Used in implementing intelligent backspacing behavior
 global undo_sent_keys_stack := []
@@ -140,6 +140,18 @@ global presses_left_until_hint_actuation := 0
 ; but is completely automatic. It is mostly used when entering filenames and 
 ; the like for fuzzy search etc., so that various characters will not be autospaced
 global in_raw_microstate := False
+
+; Currency Formatting Variables
+;-------------------------------------------------
+
+global currency_map := {}
+
+dollars := {}
+dollars["symbol"] := "$"
+dollars["symbol_location"] := "prefix"
+dollars["decimal"] := "."
+dollars["thousands_separator"] := ","
+currency_map["dollars"] := dollars
 
 ; Imports: Libraries
 ;-------------------------------------------------
@@ -194,2121 +206,2134 @@ return
 ; Left Top
 
 *Tab::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_top_pinky_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_top_pinky_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_top_pinky_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_top_pinky_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_top_pinky_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_top_pinky_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_top_pinky_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_top_pinky_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_top_pinky_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_top_pinky_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_top_pinky_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_top_pinky_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_top_pinky_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_top_pinky_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_top_pinky_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_top_pinky_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_top_pinky_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_top_pinky_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_top_pinky_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_top_pinky_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_top_pinky_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_top_pinky_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_top_pinky_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_top_pinky_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *b::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_top_pinky_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_top_pinky_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_top_pinky_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_top_pinky_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_top_pinky_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_top_pinky_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        initial_leader_state := leader
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_top_pinky_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_top_pinky_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_top_pinky_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_top_pinky_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_top_pinky_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_top_pinky_selection_lock()
-		}
-	}
+        if(leader == "shift") {
+            keys_to_return := left_top_pinky_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_top_pinky_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_top_pinky_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_top_pinky_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_top_pinky_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_top_pinky_actions_leader()
+        }
+        else if(leader == "inline_styles") {
+            keys_to_return := left_top_pinky_inline_styles_leader()
+        }
 
-	return keys_to_return
+        ; The leader state will get reset after a single
+        ; press on a leader layer. That is what this does.
+        if(leader == initial_leader_state) {
+            leader = ""
+        }
+        ; Unless a different leader was actuated on a leader layer
+        ; (that is, if leader != initial_leader_state). In that case,
+        ; we shouldn't clear the new leader state, but just leave it alone.
+    }
+
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_top_pinky_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_top_pinky_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_top_pinky_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_top_pinky_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_top_pinky_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_top_pinky_selection_lock()
+        }
+    }
+
+return keys_to_return
 
 *y::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_top_ring_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_top_ring_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_top_ring_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_top_ring_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_top_ring_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_top_ring_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_top_ring_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_top_ring_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_top_ring_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_top_ring_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_top_ring_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_top_ring_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_top_ring_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_top_ring_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_top_ring_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_top_ring_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_top_ring_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_top_ring_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_top_ring_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_top_ring_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_top_ring_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_top_ring_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_top_ring_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_top_ring_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *o::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_top_middle_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_top_middle_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_top_middle_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_top_middle_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_top_middle_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_top_middle_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_top_middle_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_top_middle_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_top_middle_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_top_middle_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_top_middle_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_top_middle_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_top_middle_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_top_middle_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_top_middle_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_top_middle_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_top_middle_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_top_middle_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_top_middle_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_top_middle_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_top_middle_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_top_middle_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_top_middle_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_top_middle_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *u::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_top_index_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_top_index_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_top_index_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_top_index_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_top_index_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_top_index_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_top_index_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_top_index_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_top_index_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_top_index_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_top_index_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_top_index_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_top_index_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_top_index_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_top_index_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_top_index_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_top_index_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_top_index_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_top_index_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_top_index_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_top_index_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_top_index_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_top_index_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_top_index_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *'::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_top_index_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_top_index_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_top_index_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_top_index_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_top_index_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_top_index_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_top_index_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_top_index_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_top_index_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_top_index_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_top_index_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_top_index_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_top_index_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_top_index_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_top_index_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_top_index_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_top_index_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_top_index_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_top_index_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_top_index_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_top_index_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_top_index_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_top_index_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_top_index_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 ; Right Top
 
 *k::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_top_index_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_top_index_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_top_index_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_top_index_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_top_index_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_top_index_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_top_index_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_top_index_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_top_index_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_top_index_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_top_index_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_top_index_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_top_index_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_top_index_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_top_index_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_top_index_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_top_index_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_top_index_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_top_index_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_top_index_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_top_index_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_top_index_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_top_index_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_top_index_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *d::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_top_index_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_top_index_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_top_index_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_top_index_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_top_index_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_top_index_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_top_index_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_top_index_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_top_index_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_top_index_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_top_index_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_top_index_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_top_index_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_top_index_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_top_index_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_top_index_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_top_index_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_top_index_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_top_index_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_top_index_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_top_index_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_top_index_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_top_index_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_top_index_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *c::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_top_middle_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_top_middle_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_top_middle_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_top_middle_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_top_middle_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_top_middle_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_top_middle_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_top_middle_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_top_middle_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_top_middle_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_top_middle_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_top_middle_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_top_middle_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_top_middle_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_top_middle_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_top_middle_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_top_middle_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_top_middle_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_top_middle_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_top_middle_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_top_middle_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_top_middle_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_top_middle_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_top_middle_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *l::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_top_ring_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_top_ring_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_top_ring_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_top_ring_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_top_ring_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_top_ring_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_top_ring_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_top_ring_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_top_ring_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_top_ring_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_top_ring_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_top_ring_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_top_ring_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_top_ring_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_top_ring_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_top_ring_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_top_ring_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_top_ring_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_top_ring_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_top_ring_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_top_ring_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_top_ring_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_top_ring_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_top_ring_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *p::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_top_pinky_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_top_pinky_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_top_pinky_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_top_pinky_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_top_pinky_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_top_pinky_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_top_pinky_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_top_pinky_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_top_pinky_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_top_pinky_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_top_pinky_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_top_pinky_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_top_pinky_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_top_pinky_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_top_pinky_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_top_pinky_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_top_pinky_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_top_pinky_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_top_pinky_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_top_pinky_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_top_pinky_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_top_pinky_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_top_pinky_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_top_pinky_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *q::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_top_pinky_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_top_pinky_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_top_pinky_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_top_pinky_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_top_pinky_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_top_pinky_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_top_pinky_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_top_pinky_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_top_pinky_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_top_pinky_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_top_pinky_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_top_pinky_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_top_pinky_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_top_pinky_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_top_pinky_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_top_pinky_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_top_pinky_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_top_pinky_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_top_pinky_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_top_pinky_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_top_pinky_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_top_pinky_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_top_pinky_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_top_pinky_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 ;------ Middle Row ------
 
 ; Left Middle
 
 *1::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_middle_pinky_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_middle_pinky_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_middle_pinky_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_middle_pinky_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_middle_pinky_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_middle_pinky_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_middle_pinky_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_middle_pinky_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_middle_pinky_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_middle_pinky_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_middle_pinky_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_middle_pinky_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_middle_pinky_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_middle_pinky_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_middle_pinky_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_middle_pinky_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_middle_pinky_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_middle_pinky_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_middle_pinky_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_middle_pinky_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_middle_pinky_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_middle_pinky_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_middle_pinky_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_middle_pinky_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *h::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_middle_pinky_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_middle_pinky_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_middle_pinky_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_middle_pinky_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_middle_pinky_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_middle_pinky_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_middle_pinky_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_middle_pinky_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_middle_pinky_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_middle_pinky_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_middle_pinky_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_middle_pinky_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_middle_pinky_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_middle_pinky_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_middle_pinky_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_middle_pinky_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_middle_pinky_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_middle_pinky_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_middle_pinky_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_middle_pinky_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_middle_pinky_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_middle_pinky_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_middle_pinky_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_middle_pinky_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *i::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_middle_ring_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_middle_ring_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_middle_ring_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_middle_ring_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_middle_ring_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_middle_ring_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_middle_ring_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_middle_ring_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_middle_ring_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_middle_ring_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_middle_ring_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_middle_ring_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_middle_ring_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_middle_ring_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_middle_ring_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_middle_ring_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_middle_ring_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_middle_ring_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_middle_ring_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_middle_ring_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_middle_ring_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_middle_ring_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_middle_ring_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_middle_ring_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *e::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_middle_middle_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_middle_middle_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_middle_middle_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_middle_middle_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_middle_middle_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_middle_middle_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_middle_middle_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_middle_middle_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_middle_middle_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_middle_middle_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_middle_middle_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_middle_middle_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_middle_middle_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_middle_middle_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_middle_middle_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_middle_middle_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_middle_middle_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_middle_middle_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_middle_middle_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_middle_middle_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_middle_middle_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_middle_middle_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_middle_middle_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_middle_middle_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *a::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_middle_index_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_middle_index_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_middle_index_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_middle_index_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_middle_index_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_middle_index_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_middle_index_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_middle_index_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_middle_index_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_middle_index_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_middle_index_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_middle_index_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_middle_index_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_middle_index_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_middle_index_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_middle_index_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_middle_index_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_middle_index_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_middle_index_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_middle_index_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_middle_index_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_middle_index_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_middle_index_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_middle_index_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *.::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_middle_index_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_middle_index_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_middle_index_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_middle_index_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_middle_index_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_middle_index_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_middle_index_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_middle_index_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_middle_index_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_middle_index_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_middle_index_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_middle_index_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_middle_index_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_middle_index_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_middle_index_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_middle_index_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_middle_index_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_middle_index_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_middle_index_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_middle_index_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_middle_index_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_middle_index_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_middle_index_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_middle_index_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 ; Right Middle
 
 *m::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_middle_index_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_middle_index_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_middle_index_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_middle_index_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_middle_index_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_middle_index_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_middle_index_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_middle_index_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_middle_index_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_middle_index_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_middle_index_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_middle_index_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_middle_index_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_middle_index_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_middle_index_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_middle_index_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_middle_index_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_middle_index_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_middle_index_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_middle_index_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_middle_index_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_middle_index_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_middle_index_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_middle_index_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *t::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_middle_index_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_middle_index_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_middle_index_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_middle_index_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_middle_index_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_middle_index_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_middle_index_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_middle_index_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_middle_index_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_middle_index_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_middle_index_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_middle_index_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_middle_index_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_middle_index_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_middle_index_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_middle_index_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_middle_index_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_middle_index_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_middle_index_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_middle_index_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_middle_index_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_middle_index_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_middle_index_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_middle_index_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *s::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_middle_middle_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_middle_middle_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_middle_middle_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_middle_middle_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_middle_middle_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_middle_middle_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_middle_middle_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_middle_middle_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_middle_middle_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_middle_middle_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_middle_middle_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_middle_middle_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_middle_middle_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_middle_middle_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_middle_middle_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_middle_middle_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_middle_middle_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_middle_middle_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_middle_middle_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_middle_middle_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_middle_middle_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_middle_middle_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_middle_middle_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_middle_middle_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *r::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_middle_ring_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_middle_ring_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_middle_ring_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_middle_ring_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_middle_ring_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_middle_ring_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_middle_ring_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_middle_ring_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_middle_ring_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_middle_ring_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_middle_ring_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_middle_ring_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_middle_ring_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_middle_ring_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_middle_ring_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_middle_ring_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_middle_ring_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_middle_ring_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_middle_ring_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_middle_ring_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_middle_ring_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_middle_ring_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_middle_ring_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_middle_ring_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *n::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_middle_pinky_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_middle_pinky_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_middle_pinky_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_middle_pinky_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_middle_pinky_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_middle_pinky_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_middle_pinky_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_middle_pinky_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_middle_pinky_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_middle_pinky_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_middle_pinky_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_middle_pinky_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_middle_pinky_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_middle_pinky_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_middle_pinky_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_middle_pinky_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_middle_pinky_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_middle_pinky_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_middle_pinky_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_middle_pinky_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_middle_pinky_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_middle_pinky_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_middle_pinky_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_middle_pinky_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *v::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_middle_pinky_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_middle_pinky_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_middle_pinky_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_middle_pinky_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_middle_pinky_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_middle_pinky_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_middle_pinky_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_middle_pinky_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_middle_pinky_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_middle_pinky_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_middle_pinky_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_middle_pinky_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_middle_pinky_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_middle_pinky_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_middle_pinky_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_middle_pinky_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_middle_pinky_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_middle_pinky_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_middle_pinky_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_middle_pinky_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_middle_pinky_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_middle_pinky_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_middle_pinky_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_middle_pinky_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 ;------ Bottom Row ------
 
 ; Left Bottom
 
 *2::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_bottom_pinky_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_bottom_pinky_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_bottom_pinky_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_bottom_pinky_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_bottom_pinky_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_bottom_pinky_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_bottom_pinky_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_bottom_pinky_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_bottom_pinky_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_bottom_pinky_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_bottom_pinky_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_bottom_pinky_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_bottom_pinky_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_bottom_pinky_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_bottom_pinky_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_bottom_pinky_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_bottom_pinky_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_bottom_pinky_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_bottom_pinky_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_bottom_pinky_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_bottom_pinky_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_bottom_pinky_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_bottom_pinky_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_bottom_pinky_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *x::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_bottom_pinky_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_bottom_pinky_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_bottom_pinky_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_bottom_pinky_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_bottom_pinky_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_bottom_pinky_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_bottom_pinky_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_bottom_pinky_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_bottom_pinky_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_bottom_pinky_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_bottom_pinky_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_bottom_pinky_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_bottom_pinky_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_bottom_pinky_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_bottom_pinky_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_bottom_pinky_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_bottom_pinky_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_bottom_pinky_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_bottom_pinky_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_bottom_pinky_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_bottom_pinky_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_bottom_pinky_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_bottom_pinky_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_bottom_pinky_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *3::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_bottom_ring_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_bottom_ring_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_bottom_ring_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_bottom_ring_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_bottom_ring_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_bottom_ring_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_bottom_ring_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_bottom_ring_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_bottom_ring_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_bottom_ring_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_bottom_ring_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_bottom_ring_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_bottom_ring_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_bottom_ring_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_bottom_ring_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_bottom_ring_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_bottom_ring_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_bottom_ring_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_bottom_ring_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_bottom_ring_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_bottom_ring_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_bottom_ring_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_bottom_ring_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_bottom_ring_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *4::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_bottom_middle_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_bottom_middle_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_bottom_middle_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_bottom_middle_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_bottom_middle_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_bottom_middle_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_bottom_middle_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_bottom_middle_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_bottom_middle_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_bottom_middle_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_bottom_middle_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_bottom_middle_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_bottom_middle_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_bottom_middle_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_bottom_middle_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_bottom_middle_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_bottom_middle_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_bottom_middle_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_bottom_middle_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_bottom_middle_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_bottom_middle_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_bottom_middle_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_bottom_middle_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_bottom_middle_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *,::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_bottom_index_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_bottom_index_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_bottom_index_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_bottom_index_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_bottom_index_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_bottom_index_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_bottom_index_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_bottom_index_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_bottom_index_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_bottom_index_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_bottom_index_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_bottom_index_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_bottom_index_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_bottom_index_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_bottom_index_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_bottom_index_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_bottom_index_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_bottom_index_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_bottom_index_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_bottom_index_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_bottom_index_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_bottom_index_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_bottom_index_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_bottom_index_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *5::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_bottom_index_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_bottom_index_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_bottom_index_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_bottom_index_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_bottom_index_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_bottom_index_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_bottom_index_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_bottom_index_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_bottom_index_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_bottom_index_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_bottom_index_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_bottom_index_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_bottom_index_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_bottom_index_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_bottom_index_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_bottom_index_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_bottom_index_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_bottom_index_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_bottom_index_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_bottom_index_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_bottom_index_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_bottom_index_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_bottom_index_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_bottom_index_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 ; Right Bottom
 
 *w::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_bottom_index_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_bottom_index_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_bottom_index_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_bottom_index_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_bottom_index_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_bottom_index_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_bottom_index_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_bottom_index_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_bottom_index_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_bottom_index_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_bottom_index_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_bottom_index_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_bottom_index_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_bottom_index_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_bottom_index_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_bottom_index_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_bottom_index_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_bottom_index_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_bottom_index_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_bottom_index_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_bottom_index_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_bottom_index_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_bottom_index_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_bottom_index_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *g::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_bottom_index_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_bottom_index_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_bottom_index_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_bottom_index_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_bottom_index_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_bottom_index_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_bottom_index_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_bottom_index_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_bottom_index_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_bottom_index_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_bottom_index_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_bottom_index_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_bottom_index_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_bottom_index_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_bottom_index_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_bottom_index_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_bottom_index_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_bottom_index_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_bottom_index_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_bottom_index_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_bottom_index_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_bottom_index_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_bottom_index_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_bottom_index_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *f::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_bottom_middle_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_bottom_middle_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_bottom_middle_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_bottom_middle_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_bottom_middle_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_bottom_middle_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_bottom_middle_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_bottom_middle_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_bottom_middle_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_bottom_middle_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_bottom_middle_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_bottom_middle_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_bottom_middle_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_bottom_middle_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_bottom_middle_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_bottom_middle_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_bottom_middle_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_bottom_middle_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_bottom_middle_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_bottom_middle_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_bottom_middle_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_bottom_middle_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_bottom_middle_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_bottom_middle_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *j::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_bottom_ring_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_bottom_ring_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_bottom_ring_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_bottom_ring_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_bottom_ring_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_bottom_ring_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_bottom_ring_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_bottom_ring_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_bottom_ring_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_bottom_ring_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_bottom_ring_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_bottom_ring_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_bottom_ring_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_bottom_ring_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_bottom_ring_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_bottom_ring_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_bottom_ring_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_bottom_ring_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_bottom_ring_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_bottom_ring_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_bottom_ring_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_bottom_ring_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_bottom_ring_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_bottom_ring_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *z::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_bottom_pinky_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_bottom_pinky_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_bottom_pinky_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_bottom_pinky_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_bottom_pinky_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_bottom_pinky_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_bottom_pinky_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_bottom_pinky_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_bottom_pinky_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_bottom_pinky_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_bottom_pinky_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_bottom_pinky_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_bottom_pinky_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_bottom_pinky_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_bottom_pinky_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_bottom_pinky_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_bottom_pinky_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_bottom_pinky_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_bottom_pinky_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_bottom_pinky_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_bottom_pinky_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_bottom_pinky_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_bottom_pinky_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_bottom_pinky_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *6::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_bottom_pinky_extension_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_bottom_pinky_extension_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_bottom_pinky_extension_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_bottom_pinky_extension_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_bottom_pinky_extension_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_bottom_pinky_extension_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_bottom_pinky_extension_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_bottom_pinky_extension_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_bottom_pinky_extension_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_bottom_pinky_extension_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_bottom_pinky_extension_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_bottom_pinky_extension_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_bottom_pinky_extension_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_bottom_pinky_extension_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_bottom_pinky_extension_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_bottom_pinky_extension_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_bottom_pinky_extension_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_bottom_pinky_extension_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_bottom_pinky_extension_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_bottom_pinky_extension_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_bottom_pinky_extension_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_bottom_pinky_extension_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_bottom_pinky_extension_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_bottom_pinky_extension_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 ;------ Thumbs Row ------
 
 ; Left Thumbs
 
 *7::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_thumb_inner_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_thumb_inner_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_thumb_inner_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_thumb_inner_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_thumb_inner_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_thumb_inner_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_thumb_inner_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_thumb_inner_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_thumb_inner_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_thumb_inner_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_thumb_inner_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_thumb_inner_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_thumb_inner_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_thumb_inner_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_thumb_inner_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_thumb_inner_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_thumb_inner_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_thumb_inner_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_thumb_inner_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_thumb_inner_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_thumb_inner_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_thumb_inner_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_thumb_inner_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_thumb_inner_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *Space::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_thumb_neutral_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_thumb_neutral_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_thumb_neutral_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_thumb_neutral_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_thumb_neutral_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_thumb_neutral_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_thumb_neutral_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_thumb_neutral_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_thumb_neutral_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_thumb_neutral_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_thumb_neutral_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_thumb_neutral_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_thumb_neutral_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_thumb_neutral_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_thumb_neutral_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_thumb_neutral_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_thumb_neutral_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_thumb_neutral_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_thumb_neutral_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_thumb_neutral_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_thumb_neutral_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_thumb_neutral_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_thumb_neutral_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_thumb_neutral_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *8::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := left_thumb_outer_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := left_thumb_outer_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := left_thumb_outer_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := left_thumb_outer_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := left_thumb_outer_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := left_thumb_outer_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := left_thumb_outer_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := left_thumb_outer_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := left_thumb_outer_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := left_thumb_outer_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := left_thumb_outer_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := left_thumb_outer_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := left_thumb_outer_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := left_thumb_outer_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := left_thumb_outer_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := left_thumb_outer_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := left_thumb_outer_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := left_thumb_outer_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := left_thumb_outer_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := left_thumb_outer_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := left_thumb_outer_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := left_thumb_outer_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := left_thumb_outer_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := left_thumb_outer_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 ; Right Thumbs
 
 *Enter::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_thumb_outer_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_thumb_outer_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_thumb_outer_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_thumb_outer_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_thumb_outer_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_thumb_outer_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_thumb_outer_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_thumb_outer_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_thumb_outer_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_thumb_outer_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_thumb_outer_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_thumb_outer_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_thumb_outer_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_thumb_outer_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_thumb_outer_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_thumb_outer_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_thumb_outer_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_thumb_outer_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_thumb_outer_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_thumb_outer_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_thumb_outer_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_thumb_outer_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_thumb_outer_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_thumb_outer_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *Backspace::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_thumb_neutral_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_thumb_neutral_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_thumb_neutral_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_thumb_neutral_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_thumb_neutral_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_thumb_neutral_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_thumb_neutral_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_thumb_neutral_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_thumb_neutral_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_thumb_neutral_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_thumb_neutral_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_thumb_neutral_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_thumb_neutral_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_thumb_neutral_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_thumb_neutral_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_thumb_neutral_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_thumb_neutral_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_thumb_neutral_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_thumb_neutral_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_thumb_neutral_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_thumb_neutral_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_thumb_neutral_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_thumb_neutral_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_thumb_neutral_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return
 
 *9::
-	keys_to_return := ""
+    keys_to_return := ""
 
-	; Leaders
-	if(leader != "") {
-		if(leader == "shift") {
-			keys_to_return := right_thumb_inner_shift_leader()
-		}
-		else if(leader == "caps") {
-			keys_to_return := right_thumb_inner_caps_leader()
-		}
-		else if(leader == "number") {
-			keys_to_return := right_thumb_inner_number_leader()
-		}
-		else if(leader == "command") {
-			keys_to_return := right_thumb_inner_command_leader()
-		}
-		else if(leader == "function") {
-			keys_to_return := right_thumb_inner_function_leader()
-		}
-		else if(leader == "actions") {
-			keys_to_return := right_thumb_inner_actions_leader()
-		}
-		leader = ""
-	}
+    ; Leaders
+    if(leader != "") {
+        if(leader == "shift") {
+            keys_to_return := right_thumb_inner_shift_leader()
+        }
+        else if(leader == "caps") {
+            keys_to_return := right_thumb_inner_caps_leader()
+        }
+        else if(leader == "number") {
+            keys_to_return := right_thumb_inner_number_leader()
+        }
+        else if(leader == "command") {
+            keys_to_return := right_thumb_inner_command_leader()
+        }
+        else if(leader == "function") {
+            keys_to_return := right_thumb_inner_function_leader()
+        }
+        else if(leader == "actions") {
+            keys_to_return := right_thumb_inner_actions_leader()
+        }
+        leader = ""
+    }
 
-	; Locks
-	else {
-		if(locked == "base") {
-			keys_to_return := right_thumb_inner_base_lock()
-		}
-		else if(locked == "caps") {
-			keys_to_return := right_thumb_inner_caps_lock()
-		}
-		else if(locked == "number") {
-			keys_to_return := right_thumb_inner_number_lock()
-		}
-		else if(locked == "function") {
-			keys_to_return := right_thumb_inner_function_lock()
-		}
-		else if(locked == "actions") {
-			keys_to_return := right_thumb_inner_actions_lock()
-		}
-		else if(locked == "selection") {
-			keys_to_return := right_thumb_inner_selection_lock()
-		}
-	}
+    ; Locks
+    else {
+        if(locked == "base") {
+            keys_to_return := right_thumb_inner_base_lock()
+        }
+        else if(locked == "caps") {
+            keys_to_return := right_thumb_inner_caps_lock()
+        }
+        else if(locked == "number") {
+            keys_to_return := right_thumb_inner_number_lock()
+        }
+        else if(locked == "function") {
+            keys_to_return := right_thumb_inner_function_lock()
+        }
+        else if(locked == "actions") {
+            keys_to_return := right_thumb_inner_actions_lock()
+        }
+        else if(locked == "selection") {
+            keys_to_return := right_thumb_inner_selection_lock()
+        }
+    }
 
-	return keys_to_return
+return keys_to_return

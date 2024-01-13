@@ -2,20 +2,30 @@
 SendMode Input
 SetWorkingDir, %A_ScriptDir%
 
-global myVar := Object("i'm", "I'm")
-global hotstrings := {} ;Object("btw", "by the way", "i", "I", "i'd", "I'd", "i'll", "I'll", "i'm", "I'm", "i've", "I've")
-
-hotstrings["btw"] := "by the way"
-
-myFunc(uppercaseLetter) {
-    MsgBox % uppercaseLetter
-}
-
 *f::
-    x := "B"
-    y := "b"
-    MsgBox % (x = y)
+    test_stack := []
+    ; test_stack.Push(["a", "b", "c"])
+    ; test_stack.Push(["1", "2", "3"])
+    some_array := ["a", "b", "c"]
+    test_stack.push(some_array)
+    popped := test_stack.Pop()
+    MsgBox % popped[2]
 return
+
+; global myVar := Object("i'm", "I'm")
+; global hotstrings := {} ;Object("btw", "by the way", "i", "I", "i'd", "I'd", "i'll", "I'll", "i'm", "I'm", "i've", "I've")
+
+; hotstrings["btw"] := "by the way"
+
+; myFunc(uppercaseLetter) {
+;     MsgBox % uppercaseLetter
+; }
+
+; *f::
+;     x := "B"
+;     y := "b"
+;     MsgBox % (x = y)
+; return
 
 ; global numLeader := False
 ; global numDownNoUp := False

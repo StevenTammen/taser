@@ -121,15 +121,33 @@ left_bottom_pinky_base_lock() {
 }
 
 left_bottom_ring_base_lock() {
-    return quotes()
+    ; You chain modifiers using the bottom row keys on the base layer
+    if(modifier_state == "leader" or modifier_state == "locked") {
+        return mod_control()
+    }
+    else {
+        return quotes()
+    }
 }
 
 left_bottom_middle_base_lock() {
-    return close_parenthesis()
+    ; You chain modifiers using the bottom row keys on the base layer
+    if(modifier_state == "leader" or modifier_state == "locked") {
+        return mod_alt()
+    }
+    else {
+        return close_parenthesis()
+    }
 }
 
 left_bottom_index_base_lock() {
-    return comma()
+    ; You chain modifiers using the bottom row keys on the base layer
+    if(modifier_state == "leader" or modifier_state == "locked") {
+        return mod_shift()
+    }
+    else {
+        return comma()
+    }
 }
 
 left_bottom_index_extension_base_lock() {

@@ -17,7 +17,7 @@ left_top_ring_num() {
 }
 
 left_top_middle_num() {
-    return number_lock_nine()
+    return nine_autolock_number_layer()
 }
 
 left_top_index_num() {
@@ -36,7 +36,7 @@ right_top_index_extension_num() {
 }
 
 right_top_index_num() {
-    return number_lock_eight()
+    return eight_autolock_number_layer()
 }
 
 right_top_middle_num() {
@@ -63,19 +63,19 @@ left_middle_pinky_extension_num() {
 }
 
 left_middle_pinky_num() {
-    return number_lock_one()
+    return one_autolock_number_layer()
 }
 
 left_middle_ring_num() {
-    return number_lock_three()
+    return three_autolock_number_layer()
 }
 
 left_middle_middle_num() {
-    return number_lock_five()
+    return five_autolock_number_layer()
 }
 
 left_middle_index_num() {
-    return number_lock_seven()
+    return seven_autolock_number_layer()
 }
 
 left_middle_index_extension_num() {
@@ -90,19 +90,19 @@ right_middle_index_extension_num() {
 }
 
 right_middle_index_num() {
-    return number_lock_zero()
+    return zero_autolock_number_layer()
 }
 
 right_middle_middle_num() {
-    return number_lock_six()
+    return six_autolock_number_layer()
 }
 
 right_middle_ring_num() {
-    return number_lock_four()
+    return four_autolock_number_layer()
 }
 
 right_middle_pinky_num() {
-    return number_lock_two()
+    return two_autolock_number_layer()
 }
 
 right_middle_pinky_extension_num() {

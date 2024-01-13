@@ -17,7 +17,7 @@ left_top_ring_num() {
 }
 
 left_top_middle_num() {
-    return number_lock_nine()
+    return nine()
 }
 
 left_top_index_num() {
@@ -32,11 +32,11 @@ left_top_index_extension_num() {
 ;-------------------------------------------------
 
 right_top_index_extension_num() {
-    return format_as_other_other_currency()
+    return number_lock_format_as_other_other_currency()
 }
 
 right_top_index_num() {
-    return number_lock_eight()
+    return eight()
 }
 
 right_top_middle_num() {
@@ -48,7 +48,7 @@ right_top_ring_num() {
 }
 
 right_top_pinky_num() {
-    return format_with_commas()
+    return number_lock_format_with_commas()
 }
 
 right_top_pinky_extension_num() {
@@ -63,19 +63,19 @@ left_middle_pinky_extension_num() {
 }
 
 left_middle_pinky_num() {
-    return number_lock_one()
+    return one()
 }
 
 left_middle_ring_num() {
-    return number_lock_three()
+    return three()
 }
 
 left_middle_middle_num() {
-    return number_lock_five()
+    return five()
 }
 
 left_middle_index_num() {
-    return number_lock_seven()
+    return seven()
 }
 
 left_middle_index_extension_num() {
@@ -86,23 +86,23 @@ left_middle_index_extension_num() {
 ;-------------------------------------------------
 
 right_middle_index_extension_num() {
-    return format_as_dollars()
+    return number_lock_format_as_dollars()
 }
 
 right_middle_index_num() {
-    return number_lock_zero()
+    return zero()
 }
 
 right_middle_middle_num() {
-    return number_lock_six()
+    return six()
 }
 
 right_middle_ring_num() {
-    return number_lock_four()
+    return four()
 }
 
 right_middle_pinky_num() {
-    return number_lock_two()
+    return two()
 }
 
 right_middle_pinky_extension_num() {
@@ -117,7 +117,7 @@ left_bottom_pinky_extension_num() {
 }
 
 left_bottom_pinky_num() {
-    return write_out_number()
+    return number_lock_write_out_number()
 }
 
 left_bottom_ring_num() {
@@ -140,23 +140,23 @@ left_bottom_index_extension_num() {
 ;-------------------------------------------------
 
 right_bottom_index_extension_num() {
-    return trillion()
+    return number_lock_trillion()
 }
 
 right_bottom_index_num() {
-    return billion()
+    return number_lock_billion()
 }
 
 right_bottom_middle_num() {
-    return million()
+    return number_lock_million()
 }
 
 right_bottom_ring_num() {
-    return thousand()
+    return number_lock_thousand()
 }
 
 right_bottom_pinky_num() {
-    return hundred()
+    return number_lock_hundred()
 }
 
 right_bottom_pinky_extension_num() {

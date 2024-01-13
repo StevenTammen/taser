@@ -121,15 +121,15 @@ left_bottom_pinky_command_leader() {
 }
 
 left_bottom_ring_command_leader() {
-    ; TODO
+    return mod_control_lock()
 }
 
 left_bottom_middle_command_leader() {
-    ; TODO
+    return mod_alt_lock()
 }
 
 left_bottom_index_command_leader() {
-    ; TODO
+    return mod_shift_lock()
 }
 
 left_bottom_index_extension_command_leader() {

@@ -4,9 +4,21 @@
     ; Lock layers implicitly, without having to explicitly re-lock base.
 
     ; Note that any time you have a leader press (e.g., Shift Leader), you are already 
-    ; resetting leader and locked state. The resetting here may not always be necessary,
+    ; resetting leader and locked state. The resetting in this hook may not always be necessary,
     ; then, but it will never be wrong per se, and that is why it can end up here in this
     ; universal hook that runs on absolutely every key press.
+
+    ; At present, there is no way to distinguish between numbers that were entered from
+    ; Number Leader vs. those entered from Number Lock. Same deal for uppercase letters
+    ; too: there is no way to tell from the sent_keys_stack whether an uppercase letter
+    ; came from Shift Leader, Caps Leader, or Caps Lock. In practice, none of this is a
+    ; problem. These conditionals don't just check if the pressed key is an
+    ; uppercase letter or a number, but also check if locked = "caps" or "number",
+    ; respectively. So that handles the Shift Leader case. It actually doesn't matter
+    ; for Caps and Number whether the press is on the Leader vs. Lock versions of those
+    ; layers, since for number and uppercase letter presses, locked will be set equal to "number"
+    ; or "caps" already, before you even get to this hook. (And thus the right thing will
+    ; happen).
     if((locked == "caps") && (not is_caps_lock_press(pressed_key))) {
         locked := "base"
     }
@@ -24,14 +36,15 @@
 ; including the fall-back hotstring_neutral_key() that is used for anything that doesn't at all interact with hotstrings. {Backspace} is an exception,
 ; since it has complex one-off logic.
 
-
 completely_internal_key() {
     universal_keypress_hook("")
     return ""
 }
 
-
-
+eat_keypress() {
+    universal_keypress_hook("")
+    return ""
+}
 
 ; This function doesn't do anything per se, but is just here to make the code more readable/understandable
 ; through consistency. It implicitly makes it clear that things that call this are hotstring neutral.
@@ -104,7 +117,6 @@ hotstring_neutral_key(pressed_key, keys_to_return) {
     return keys_to_return
 }
 
-
 ; Rework which keys/actions call which hotstring functions (e.g., make more keys use the neutral function)
 
 ; Add pressed_key to all functions, and add it to all calls of the various functions. Default value?
@@ -116,27 +128,9 @@ hotstring_neutral_key(pressed_key, keys_to_return) {
 
 ; Move hotstrings into a file that gets Included, not straight in file
 
-
-
-
-
-
-
-
-
-
-
-
 ; Do not need to automatically clear caps lock or num lock since these things simply cannot end
 ; up locked down when typing jump sequences (because during jump sequences, raw keys are sent,
 ; and pressing jump key resets layer state so that you always start out on base lock)
-
-
-
-
-
-
-
 
 ; TODO: function that is like neutral key but sets current_brief := "" and last_delimiter := ""
 
@@ -155,16 +149,6 @@ hotstring_neutral_key(pressed_key, keys_to_return) {
 ; current_brief should already be equal to "" when coming out of input_state == "code",
 ; but won't hurt to make sure.
 
-
-
-
-
-
-
-
-
-
-
 ; Keys that use this function trigger expansions, but then reset the entry stacks.
 ; Used primarily for things that are movement/actions/etc. -- something that interrupts
 ; a consecutive entry sequence.
@@ -176,27 +160,18 @@ hotstring_trigger_action_key_untracked_reset_entry_related_variables(pressed_key
     return keys_to_return
 }
 
-
 ; Command Leader, Actions Leader, Selection Lock
 
 ; Tab - switching between Excel cells, input fields in a browser's web form, etc.
 ; These all have different input sequences that are separate. Just like pressing Left/Right
 ; Tab should automatically reset locked := "base"?
 
-
-
 ; TODO: Enter too, but only when in Excel?
 ; TODO: What about Tab usage in Org mode? When used in selecting options in code completion?
 ; https://emacs.stackexchange.com/questions/74701/how-can-i-change-the-org-mode-tab-behavior
 
-
 ; Do not need to automatically clear caps lock or num lock since these things simply cannot end
 ; up locked down when modifiers are active (modifier keys start you out on base lock)
-
-
-
-
-
 
 ; Move to TODO file:
 ; --------
@@ -217,15 +192,13 @@ hotstring_trigger_action_key_untracked_reset_entry_related_variables(pressed_key
 ;
 ;
 
-
-
 ; Space, Enter
 ; All punctuation
 ; All symbols (other than @, _, dot, hyphen)
 hotstring_trigger_delimiter_key_tracked(pressed_key, keys_to_return, undo_keys) {
     universal_keypress_hook(pressed_key)
-    autospacing_stack.push(autospacing)
-    automatching_stack.push(automatching)
+    autospacing_state_history_stack.push(autospacing)
+    automatching_state_history_stack.push(automatching_stack)
     sent_keys_stack.push(pressed_key)
     hotstring_text := get_hotstring_text()
     keys_to_return := add_hotstring_expansion_if_triggering_hotstring(keys_to_return, hotstring_text)
@@ -239,8 +212,8 @@ hotstring_trigger_delimiter_key_tracked(pressed_key, keys_to_return, undo_keys) 
 ; @, _, dot, hyphen
 hotstring_inactive_delimiter_key_tracked(pressed_key, keys_to_return, undo_keys) {
     universal_keypress_hook(pressed_key)
-    autospacing_stack.push(autospacing)
-    automatching_stack.push(automatching)
+    autospacing_state_history_stack.push(autospacing)
+    automatching_state_history_stack.push(automatching_stack)
     sent_keys_stack.push(pressed_key)
     undo_sent_keys_stack.push(undo_keys)
     last_delimiter := pressed_key
@@ -251,8 +224,8 @@ hotstring_inactive_delimiter_key_tracked(pressed_key, keys_to_return, undo_keys)
 ; a-z, A-Z, 0-9, apostrophe
 hotstring_character_key(pressed_key, keys_to_return, undo_keys) {
     universal_keypress_hook(pressed_key)
-    autospacing_stack.push(autospacing)
-    automatching_stack.push(automatching)
+    autospacing_state_history_stack.push(autospacing)
+    automatching_state_history_stack.push(automatching_stack)
     sent_keys_stack.push(pressed_key)
     undo_sent_keys_stack.push(undo_keys)
     if((prose_mode_should_be_active()) or (not in_raw_microstate())) {

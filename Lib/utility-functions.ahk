@@ -90,7 +90,7 @@ in_raw_microstate() {
     ; if() {
     ;     return True
     ; }
-    return ((raw_state == "lock") || in_raw_microstate)
+    return ((raw_state == "lock") or in_raw_microstate)
 }
 
 ; TODO function for seeing if a JetBrains editor is active = full AceJump
@@ -99,9 +99,9 @@ in_raw_microstate() {
 
 reset_entry_related_variables() {
     autospacing := "not-autospaced"
-    autospacing_stack := []
-    automatching := ""
+    autospacing_state_history_stack := []
     automatching_stack := []
+    automatching_state_history_stack := []
     sent_keys_stack := []
     undo_sent_keys_stack := []
     last_delimiter := ""
@@ -314,66 +314,63 @@ add_undo_keys_for_hotstring_expansion_if_triggering_hotstring(undo_keys, hotstri
     return undo_keys
 }
 
-
 number_lock_keys := [
 
-    ; Top row, left to right
-    "number_lock_back_slash",
-    "number_lock_colon",
-    "8",
-    "number_lock_en_dash",
-    "9",
-    "number_lock_dot",
-    "number_lock_percentage_sign",
+; Top row, left to right
+"/",
+"number_lock_colon",
+"8",
+"en_dash",
+"9",
+"dot",
+"%",
 
-    ; Middle row, left to right
-    "1",
-    "3",
-    "5",
-    "7",
-    "number_lock_format_as_dollars",
-    "0",
-    "6",
-    "4",
-    "2",
+; Middle row, left to right
+"1",
+"3",
+"5",
+"7",
+"number_lock_format_as_dollars",
+"0",
+"6",
+"4",
+"2",
 ]
 
 caps_lock_keys := [
 
-    ; Top row, left to right
-    "caps_lock_b",
-    "caps_lock_y",
-    "caps_lock_o",
-    "caps_lock_u",
-    "caps_lock_k",
-    "caps_lock_d",
-    "caps_lock_c",
-    "caps_lock_l",
-    "caps_lock_p",
-    "caps_lock_q",
+; Top row, left to right
+"B",
+"Y",
+"O",
+"U",
+"K",
+"D",
+"C",
+"L",
+"P",
+"Q",
 
-    ; Middle row, left to right
-    "caps_lock_h",
-    "caps_lock_i",
-    "caps_lock_e",
-    "caps_lock_a",
-    "caps_lock_m",
-    "caps_lock_t",
-    "caps_lock_s",
-    "caps_lock_r",
-    "caps_lock_n",
-    "caps_lock_v",
+; Middle row, left to right
+"H",
+"I",
+"E",
+"A",
+"M",
+"T",
+"S",
+"R",
+"N",
+"V",
 
-    ; Bottom row, left to right
-    "caps_lock_x",
-    "caps_lock_w",
-    "caps_lock_g",
-    "caps_lock_f",
-    "caps_lock_j",
-    "caps_lock_z",
+; Bottom row, left to right
+"X",
+"W",
+"G",
+"F",
+"J",
+"Z",
 ]
-
-
 
 ; Test for:
 ; - Empty stack
@@ -423,7 +420,7 @@ remove_word_from_top_of_stack() {
             item_on_top_of_stack := sent_keys_stack[index]
             is_space := item_on_top_of_stack = "{Space}"
             is_enter := item_on_top_of_stack = "{Enter}"
-            is_autospaced := (autospacing_stack[index] = "autospaced") or (autospacing_stack[index] = "cap-autospaced")
+            is_autospaced := (autospacing_state_history_stack[index] = "autospaced") or (autospacing_state_history_stack[index] = "cap-autospaced")
 
             ; If we have already backspaced a word and we hit a {Space} or {Enter} or a space
             ; coming from autospacing, we stop backspacing stuff
@@ -445,12 +442,10 @@ remove_word_from_top_of_stack() {
             ; In such a case, we do backspace the hotstring expansion, but then stop there.
             else if(is_space) {
                 sent_keys_stack.pop()
-                autospacing_stack.pop()
-                autospacing := autospacing_stack[index - 1]
-                if(manually_automatching) {
-                    automatching_stack.pop()
-                    automatching := automatching_stack[index - 1]
-                }
+                autospacing_state_history_stack.pop()
+                autospacing := autospacing_state_history_stack[index - 1]
+                automatching_state_history_stack.pop()
+                automatching_stack := automatching_state_history_stack[index - 1]
                 undo_keys := undo_sent_keys_stack.pop()
                 keys_to_return := keys_to_return . undo_keys
                 if(last_press_had_triggered_hotstring(undo_keys)) {
@@ -465,12 +460,10 @@ remove_word_from_top_of_stack() {
             ; may have a triggered a hotstring, so we also have to deal with that.
             else if(is_enter and (not have_already_backspaced_word) and (not have_already_backspaced_space)) {
                 sent_keys_stack.pop()
-                autospacing_stack.pop()
-                autospacing := autospacing_stack[index - 1]
-                if(manually_automatching) {
-                    automatching_stack.pop()
-                    automatching := automatching_stack[index - 1]
-                }
+                autospacing_state_history_stack.pop()
+                autospacing := autospacing_state_history_stack[index - 1]
+                automatching_state_history_stack.pop()
+                automatching_stack := automatching_state_history_stack[index - 1]
                 undo_keys := undo_sent_keys_stack.pop()
                 keys_to_return := keys_to_return . undo_keys
                 if(last_press_had_triggered_hotstring(undo_keys)) {
@@ -487,12 +480,10 @@ remove_word_from_top_of_stack() {
             ; period. (Since now have_already_backspaced_word would no longer be false). Clear as mud, right?
             else {
                 sent_keys_stack.pop()
-                autospacing_stack.pop()
-                autospacing := autospacing_stack[index - 1]
-                if(manually_automatching) {
-                    automatching_stack.pop()
-                    automatching := automatching_stack[index - 1]
-                }
+                autospacing_state_history_stack.pop()
+                autospacing := autospacing_state_history_stack[index - 1]
+                automatching_state_history_stack.pop()
+                automatching_stack := automatching_state_history_stack[index - 1]
                 undo_keys := undo_sent_keys_stack.pop()
                 keys_to_return := keys_to_return . undo_keys
                 if(last_press_had_triggered_hotstring(undo_keys)) {
