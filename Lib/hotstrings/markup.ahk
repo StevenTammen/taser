@@ -1,0 +1,6 @@
+﻿hotstrings["h1"] := "{#}"
+hotstrings["h2"] := "{#}{#}"
+hotstrings["h3"] := "{#}{#}{#}"
+hotstrings["h4"] := "{#}{#}{#}{#}"
+hotstrings["h5"] := "{#}{#}{#}{#}{#}"
+hotstrings["h6"] := "{#}{#}{#}{#}{#}{#}"

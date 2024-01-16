@@ -1,6 +1,18 @@
 ﻿; Utility Functions
 ;-------------------------------------------------
 
+; Remove escape characters so that we loop the right number of times
+; when iterating over a string of characters. This is necessary because
+; escape characters are not sent (i.e., in SendInput) but nevertheless
+; contribute to the length of the string. If you iterate over a string
+; to send {Left} or {Right} or {Backspace} or {Delete} or whatever to enable
+; automatching or intelligent backspacing functionality, you'll get the wrong
+; thing when adding these things to keys_to_return or undo_keys unless you use
+; this function.
+rm_esc_chars(input_string) {
+    return RegExReplace(input_string, "{(.)}", "$1")
+}
+
 build_modifier_combo(key_to_combine, can_be_modified := True) {
 
     ; Take the symbols that are accessed via Shift on the
@@ -55,16 +67,16 @@ is_hotstring_character(character) {
 }
 
 is_number_lock_press(pressed_key) {
-    contains(number_lock_keys, pressed_key)
+    return contains(number_lock_keys, pressed_key)
 }
 
 is_caps_lock_press(pressed_key) {
-    contains(caps_lock_keys, pressed_key)
+    return contains(caps_lock_keys, pressed_key)
 }
 
 get_index(haystack, needle) {
     for index, value in haystack {
-        if (value = needle) {
+        if (value == needle) {
             return index
         }
     }
@@ -82,7 +94,7 @@ prose_mode_should_be_active() {
     ; if() {
     ;     return False
     ; }
-    return (input_state = "prose")
+    return (input_state == "prose")
 }
 
 in_raw_microstate() {
@@ -98,18 +110,24 @@ in_raw_microstate() {
 ; TODO function for seeing if browser is active = set up bindings for SurfingKeys
 
 reset_entry_related_variables() {
+    ; Things relating to autospacing and automatching
     autospacing := "not-autospaced"
-    autospacing_state_history_stack := []
     automatching_stack := []
-    automatching_state_history_stack := []
+    
+    ; Things related to hotstrings
     sent_keys_stack := []
-    undo_sent_keys_stack := []
     last_delimiter := ""
     current_brief := ""
+
+    ; Things relating to intelligent backspacing
+    locked_state_history_stack := []
+    automatching_state_history_stack := []
+    autospacing_state_history_stack := []
+    undo_sent_keys_stack := []
 }
 
 just_starting_new_entry() {
-    return (sent_keys_stack.Length() = 0)
+    return (sent_keys_stack.Length() == 0)
 }
 
 ; https://www.autohotkey.com/boards/viewtopic.php?t=68429
@@ -253,7 +271,7 @@ get_hotstring_text() {
     if((not prose_mode_should_be_active()) or in_raw_microstate()) {
         return ""
     }
-    else if(current_brief = "")
+    else if(current_brief == "")
     { 
         return ""
     }
@@ -289,14 +307,28 @@ get_hotstring_text() {
 
 add_hotstring_expansion_if_triggering_hotstring(keys_to_return, hotstring_text) {
     if(hotstring_text != "") {
-        ; The brief will be backspaced before the hotstring text is entered. We concatenate in reverse here
-        ; since we are adding to the front of the return keys
+        ; The brief will be backspaced before the hotstring text is entered. (See below).
+        ; We concatenate in reverse here since we are adding to the front of the return keys
         keys_to_return := hotstring_text . keys_to_return
-        Loop, Parse, current_brief
+
+        ; This handles a small set of markup/template hotstrings that need to
+        ; capitalize whatever is typed afterwards. For example, the h1-h6
+        ; hotstrings define headers in Markdown/Org. The next word after the
+        ; header hotstrings should always be capitalized, even though these
+        ; hotstrings will be triggered with Space and would not ordinarily
+        ; capitalize the next thing.
+        if(contains(capitalize_after_expansions, keys_to_return)) {
+            autospacing := "cap-autospaced"
+        }
+
+        ; Whether or not we capitalize the next thing, we need to backspace the
+        ; brief before sending the expansion and triggering delimiter
+        Loop % StrLen(current_brief)
         {
             keys_to_return := "{Backspace}" . keys_to_return
         }
     }
+
     return keys_to_return
 }
 
@@ -305,7 +337,7 @@ add_undo_keys_for_hotstring_expansion_if_triggering_hotstring(undo_keys, hotstri
     if(hotstring_text != "") {
         ; The hotstring text will be backspaced before the brief text will be re-added
         ; All this happens *after* the undo behavior of the trigger key
-        Loop, Parse, hotstring_text
+        Loop % StrLen(rm_esc_chars(hotstring_text))
         {
             undo_keys := undo_keys . "{Backspace}"
         }
@@ -313,64 +345,6 @@ add_undo_keys_for_hotstring_expansion_if_triggering_hotstring(undo_keys, hotstri
     }
     return undo_keys
 }
-
-number_lock_keys := [
-
-; Top row, left to right
-"/",
-"number_lock_colon",
-"8",
-"en_dash",
-"9",
-"dot",
-"%",
-
-; Middle row, left to right
-"1",
-"3",
-"5",
-"7",
-"number_lock_format_as_dollars",
-"0",
-"6",
-"4",
-"2",
-]
-
-caps_lock_keys := [
-
-; Top row, left to right
-"B",
-"Y",
-"O",
-"U",
-"K",
-"D",
-"C",
-"L",
-"P",
-"Q",
-
-; Middle row, left to right
-"H",
-"I",
-"E",
-"A",
-"M",
-"T",
-"S",
-"R",
-"N",
-"V",
-
-; Bottom row, left to right
-"X",
-"W",
-"G",
-"F",
-"J",
-"Z",
-]
 
 ; Test for:
 ; - Empty stack
@@ -385,7 +359,7 @@ update_hotstring_state_based_on_current_sent_keys_stack() {
         ; If you reach the end of the stack without having hit a delimiter,
         ; short circuit before trying to grab another lower thing on the stack,
         ; since there is no other lower thing on the stack
-        if(index = 0) {
+        if(index == 0) {
             last_delimiter := ""
             break
         }
@@ -411,16 +385,16 @@ remove_word_from_top_of_stack() {
     While True {
         ; If we have backspaced everything on the sent_keys_stack = are at the beginning of an entry,
         ; we stop backspacing stuff
-        if(index = 0) {
+        if(index == 0) {
             current_brief := ""
             last_delimiter := ""
             break
         }
         else {
             item_on_top_of_stack := sent_keys_stack[index]
-            is_space := item_on_top_of_stack = "{Space}"
-            is_enter := item_on_top_of_stack = "{Enter}"
-            is_autospaced := (autospacing_state_history_stack[index] = "autospaced") or (autospacing_state_history_stack[index] = "cap-autospaced")
+            is_space := item_on_top_of_stack == "{Space}"
+            is_enter := item_on_top_of_stack == "{Enter}"
+            is_autospaced := (autospacing_state_history_stack[index] == "autospaced") or (autospacing_state_history_stack[index] == "cap-autospaced")
 
             ; If we have already backspaced a word and we hit a {Space} or {Enter} or a space
             ; coming from autospacing, we stop backspacing stuff
@@ -442,10 +416,12 @@ remove_word_from_top_of_stack() {
             ; In such a case, we do backspace the hotstring expansion, but then stop there.
             else if(is_space) {
                 sent_keys_stack.pop()
-                autospacing_state_history_stack.pop()
-                autospacing := autospacing_state_history_stack[index - 1]
+                locked_state_history_stack.pop()
+                locked := locked_state_history_stack[index - 1]
                 automatching_state_history_stack.pop()
                 automatching_stack := automatching_state_history_stack[index - 1]
+                autospacing_state_history_stack.pop()
+                autospacing := autospacing_state_history_stack[index - 1]
                 undo_keys := undo_sent_keys_stack.pop()
                 keys_to_return := keys_to_return . undo_keys
                 if(last_press_had_triggered_hotstring(undo_keys)) {
@@ -460,10 +436,12 @@ remove_word_from_top_of_stack() {
             ; may have a triggered a hotstring, so we also have to deal with that.
             else if(is_enter and (not have_already_backspaced_word) and (not have_already_backspaced_space)) {
                 sent_keys_stack.pop()
-                autospacing_state_history_stack.pop()
-                autospacing := autospacing_state_history_stack[index - 1]
+                locked_state_history_stack.pop()
+                locked := locked_state_history_stack[index - 1]
                 automatching_state_history_stack.pop()
                 automatching_stack := automatching_state_history_stack[index - 1]
+                autospacing_state_history_stack.pop()
+                autospacing := autospacing_state_history_stack[index - 1]
                 undo_keys := undo_sent_keys_stack.pop()
                 keys_to_return := keys_to_return . undo_keys
                 if(last_press_had_triggered_hotstring(undo_keys)) {
@@ -480,10 +458,12 @@ remove_word_from_top_of_stack() {
             ; period. (Since now have_already_backspaced_word would no longer be false). Clear as mud, right?
             else {
                 sent_keys_stack.pop()
-                autospacing_state_history_stack.pop()
-                autospacing := autospacing_state_history_stack[index - 1]
+                locked_state_history_stack.pop()
+                locked := locked_state_history_stack[index - 1]
                 automatching_state_history_stack.pop()
                 automatching_stack := automatching_state_history_stack[index - 1]
+                autospacing_state_history_stack.pop()
+                autospacing := autospacing_state_history_stack[index - 1]
                 undo_keys := undo_sent_keys_stack.pop()
                 keys_to_return := keys_to_return . undo_keys
                 if(last_press_had_triggered_hotstring(undo_keys)) {
@@ -503,7 +483,7 @@ remove_word_from_top_of_stack() {
 
 last_press_had_triggered_hotstring(undo_keys){
     StringRight, last_character_in_undo_keys, undo_keys, 1
-    ; The only time we would have hotstring characters = letters and apostrophe
+    ; The only time we would have hotstring characters = letters and numbers and apostrophe
     ; sent in the undo_keys (at the end = re-adding them) is when the last press
     ; had triggered a hotstring
     return is_hotstring_character(last_character_in_undo_keys)
@@ -512,10 +492,10 @@ last_press_had_triggered_hotstring(undo_keys){
 had_triggered_hotstring(key, undo_keys) {
     space_undo_keys_if_not_triggering_hostring := ["{Backspace}"]
     enter_undo_keys_if_not_triggering_hostring := ["{Backspace}", "{Backspace}{Space}"]
-    if(key = "{Space}") {
+    if(key == "{Space}") {
         return (not contains(space_undo_keys_if_not_triggering_hostring, undo_keys))
     }
-    else { ; key = "{Enter}"
+    else { ; key == "{Enter}"
         return (not contains(enter_undo_keys_if_not_triggering_hostring, undo_keys))
     }
 }

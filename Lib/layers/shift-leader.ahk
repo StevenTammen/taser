@@ -79,7 +79,7 @@ left_middle_index_shift_leader() {
 }
 
 left_middle_index_extension_shift_leader() {
-    return period()
+    return semicolon()
 }
 
 ; Right Middle

@@ -11,10 +11,7 @@
     ; At present, there is no way to distinguish between numbers that were entered from
     ; Number Leader vs. those entered from Number Lock. Same deal for uppercase letters
     ; too: there is no way to tell from the sent_keys_stack whether an uppercase letter
-    ; came from Shift Leader, Caps Leader, or Caps Lock. In practice, none of this is a
-    ; problem. These conditionals don't just check if the pressed key is an
-    ; uppercase letter or a number, but also check if locked = "caps" or "number",
-    ; respectively. So that handles the Shift Leader case. It actually doesn't matter
+    ; came Caps Leader, or Caps Lock. It actually doesn't matter
     ; for Caps and Number whether the press is on the Leader vs. Lock versions of those
     ; layers, since for number and uppercase letter presses, locked will be set equal to "number"
     ; or "caps" already, before you even get to this hook. (And thus the right thing will
@@ -24,6 +21,23 @@
     }
     else if((locked == "number") && (not is_number_lock_press(pressed_key))) {
         locked := "base"
+    }
+
+    ; The above is for leaving the locked caps and Number layers automatically. Now we are
+    ; going to handle any exceptions: keys that are conceptually part of the Caps or Number
+    ; layers, but are not located on said layers, for whatever reason. Underscore, for example,
+    ; needs to be able to be entered between all-caps words without breaking out of Caps Lock,
+    ; even though given normal behavior, that is what we would expect. These conditionals handle
+    ; these exceptions for the Caps Lock and Number Lock layers.
+    sent_keys_stack_length := sent_keys_stack.Length()
+    if(sent_keys_stack_length != 0) {
+        last_item_on_stack := sent_keys_stack[sent_keys_stack_length]
+        if(contains(dispersed_caps_lock_keys, pressed_key) and is_caps_lock_press(last_item_on_stack)) {
+            locked := "caps"
+        }
+        else if(contains(dispersed_number_lock_keys, pressed_key) and is_number_lock_press(last_item_on_stack)) {
+            locked := "number"
+        }
     }
 }
 
@@ -197,40 +211,52 @@ hotstring_trigger_action_key_untracked_reset_entry_related_variables(pressed_key
 ; All symbols (other than @, _, dot, hyphen)
 hotstring_trigger_delimiter_key_tracked(pressed_key, keys_to_return, undo_keys) {
     universal_keypress_hook(pressed_key)
-    autospacing_state_history_stack.push(autospacing)
-    automatching_state_history_stack.push(automatching_stack)
-    sent_keys_stack.push(pressed_key)
     hotstring_text := get_hotstring_text()
     keys_to_return := add_hotstring_expansion_if_triggering_hotstring(keys_to_return, hotstring_text)
-    undo_keys := add_undo_keys_for_hotstring_expansion_if_triggering_hotstring(pressed_key, undo_keys, hotstring_text)
-    undo_sent_keys_stack.push(undo_keys)
+    undo_keys := add_undo_keys_for_hotstring_expansion_if_triggering_hotstring(undo_keys, hotstring_text)
+    
+    sent_keys_stack.push(pressed_key)
     last_delimiter := pressed_key
     current_brief := ""
+
+    locked_state_history_stack.push(locked)
+    automatching_state_history_stack.push(automatching_stack)
+    autospacing_state_history_stack.push(autospacing)
+    undo_sent_keys_stack.push(undo_keys)
+
     return keys_to_return
 }
 
 ; @, _, dot, hyphen
 hotstring_inactive_delimiter_key_tracked(pressed_key, keys_to_return, undo_keys) {
     universal_keypress_hook(pressed_key)
-    autospacing_state_history_stack.push(autospacing)
-    automatching_state_history_stack.push(automatching_stack)
+
     sent_keys_stack.push(pressed_key)
-    undo_sent_keys_stack.push(undo_keys)
     last_delimiter := pressed_key
     current_brief := ""
+
+    locked_state_history_stack.push(locked)
+    automatching_state_history_stack.push(automatching_stack)
+    autospacing_state_history_stack.push(autospacing)
+    undo_sent_keys_stack.push(undo_keys)
+
     return keys_to_return
 }
 
 ; a-z, A-Z, 0-9, apostrophe
 hotstring_character_key(pressed_key, keys_to_return, undo_keys) {
     universal_keypress_hook(pressed_key)
-    autospacing_state_history_stack.push(autospacing)
-    automatching_state_history_stack.push(automatching_stack)
+
     sent_keys_stack.push(pressed_key)
-    undo_sent_keys_stack.push(undo_keys)
     if((prose_mode_should_be_active()) or (not in_raw_microstate())) {
         current_brief := current_brief . pressed_key
     }
+
+    locked_state_history_stack.push(locked)
+    automatching_state_history_stack.push(automatching_stack)
+    autospacing_state_history_stack.push(autospacing)
+    undo_sent_keys_stack.push(undo_keys)
+
     return keys_to_return
 }
 

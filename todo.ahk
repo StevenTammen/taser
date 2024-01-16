@@ -210,7 +210,7 @@ normal_key_except_between_numbers(character, can_be_modified := True) {
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         ; Always comes after jump key that clears sent_keys_stack
         return hotstring_neutral_key(character)
@@ -247,7 +247,7 @@ inactive_delimiter_key_except_between_numbers(character, can_be_modified := True
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         ; Always comes after jump key that clears sent_keys_stack
         return hotstring_neutral_key(character)
@@ -289,7 +289,7 @@ no_cap_punctuation_key_specify_mod_char(character, mod_character, can_be_modifie
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(raw_state == "leader") {
             raw_state := ""
@@ -312,18 +312,18 @@ no_cap_punctuation_key_specify_mod_char(character, mod_character, can_be_modifie
         ; This case happens when you pass through capitalization after quotes,
         ; for example. So like the sequence "Some question?" followed by a
         ; comma keypress
-        else if(autospacing = "cap-autospaced") {
+        else if(autospacing == "cap-autospaced") {
             autospacing := "autospaced"
             keys_to_return := "{Backspace}" . character . "{Space}"
             undo_keys := "{Backspace 2}{Space}"
 
         }
         ; This case happens after quotes and numbers, for example
-        else if(autospacing = "autospaced") {
+        else if(autospacing == "autospaced") {
             keys_to_return := "{Backspace}" . character . "{Space}"
             undo_keys := "{Backspace 2}{Space}"
         } 
-        else { ; autospacing = "not-autospaced"
+        else { ; autospacing == "not-autospaced"
             autospacing := "autospaced"
             keys_to_return := character . "{Space}"
             undo_keys := "{Backspace 2}"
@@ -362,7 +362,7 @@ number_key(num) {
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(raw_state == "leader") {
             raw_state := ""
@@ -380,7 +380,7 @@ number_key(num) {
             one_key_back := sent_keys_stack[sent_keys_stack_length]
             two_keys_back := sent_keys_stack[sent_keys_stack_length - 1]
         }
-        else if (sent_keys_stack_length = 1) {
+        else if (sent_keys_stack_length == 1) {
             one_key_back := sent_keys_stack[sent_keys_stack_length]
         }
         if(raw_state == "leader") {
@@ -392,12 +392,12 @@ number_key(num) {
             keys_to_return := num
             undo_keys := "{Backspace}"
         }
-        else if(autospacing = "cap-autospaced") {
+        else if(autospacing == "cap-autospaced") {
             autospacing := "autospaced"
             keys_to_return := num . "{Space}"
             undo_keys := "{Backspace 2}"
         }
-        else if(autospacing = "autospaced") {
+        else if(autospacing == "autospaced") {
             ; No spaces between consecutive numbers
             if(is_number(one_key_back)) {
                 keys_to_return := "{Backspace}" . num . "{Space}"
@@ -406,7 +406,7 @@ number_key(num) {
             ; No spaces between numbers and colon/decimal point/hyphen/slash.
             ; Could transform hyphens into en dashes automatically if desired,
             ; but I just choose not to.
-            else if(is_number(two_keys_back) and (one_key_back = ":" or one_key_back = "." or one_key_back = "-" or one_key_back = "/")) {
+            else if(is_number(two_keys_back) and (one_key_back == ":" or one_key_back == "." or one_key_back == "-" or one_key_back == "/")) {
                 keys_to_return := "{Backspace}" . num . "{Space}"
                 undo_keys := "{Backspace 2}{Space}"
             }
@@ -415,7 +415,7 @@ number_key(num) {
                 undo_keys := "{Backspace 2}"
             }
         } 
-        else { ; autospacing = "not-autospaced"
+        else { ; autospacing == "not-autospaced"
             autospacing := "autospaced"
             if(just_starting_new_entry()) {
                 keys_to_return := num . "{Space}"
@@ -842,3 +842,15 @@ emoji_pleading_face() {
 ; Image Link
 ; LaTeX equation block
 
+
+
+modifiable_hotstring_trigger_shift_action_key(key) {
+    if(modifier_state == "leader" or modifier_state == "locked") {
+        keys_to_return := build_modifier_combo(key)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(key, keys_to_return)
+    }
+    else {
+        keys_to_return := "+" . key
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(key, keys_to_return)
+    }
+}

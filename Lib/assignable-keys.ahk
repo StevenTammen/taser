@@ -1,26 +1,159 @@
-﻿; Test Number Lock and Caps Lock autolocking behavior
+﻿
+/*
 
-; Headers h1-h6 with hotstrings. Verify hotstring behavior with hotstrings including numbers,
-; and also backspacing and backspacing by word
 
-; Test function keys, function lock accessed from command layer
 
-; Test modifiers
 
-; Test raw leader and raw lock
 
-; Test cancel key (to get out of modes/inlines styles, and also to just reset layer)
 
-; Test prose mode and code mode
 
-; Test manually getting back to base layer using Base Lock key
+*/
 
-; Test action layer leader and lock as they are currently
 
-; Test selection layer lock as it is currently, including with modified arrow key presses
 
-; Test automatching of normal stuff likes parentheses and quotes, but also all the new inline styles
-; Especially test adding Markdown links
+/*
+
+Test Number Lock and Caps Lock autolocking behavior
+DONE
+
+
+Ellipsis and capital ellipsis
+DONE
+
+Test automatching of normal stuff likes parentheses and quotes, but also all the new inline styles
+Especially test adding Markdown links (two blank behavior)
+DONE
+
+Make it so double tapping leader keys does not reset leader.
+DONE
+
+Remove {} characters from opening/between/closing character strings when looping across length, so that
+the iterations come out right when sending Left/Right
+DONE
+
+Add option to not pass through capitalization for matched pair and two blank things
+DONE
+
+Re-test hotstrings now that they are organized in includes
+DONE
+
+Headers h1-h6 with hotstrings. Verify hotstring behavior with hotstrings including numbers,
+and also backspacing and backspacing by word
+DONE
+
+
+
+
+Test raw leader and raw lock
+DONE
+
+Test cancel key (to get out of modes/inlines styles, and also to just reset layer)
+DONE
+
+Test prose mode and code mode
+DONE
+
+Test manually getting back to base layer using Base Lock key
+DONE
+
+Verifying hotstrings don't fire on Caps uppercase letters
+DONE
+
+Test action layer leader
+DONE
+
+Make underscore on shift layer not break out of caps lock (so it can be used in NAMED_CONSTANTS)
+DONE
+
+Storing locked state for resetting when backspacing/backspacing by word like auto matching and autospacing.
+(Don't have leader state saving, since it doesn't do anything). So that typos when on Caps or Number Locked
+; can be more easily fixed
+DONE
+
+Testing for the above: investigate backspacing behavior with shift leader, raw leader, etc.
+=> Keyboard state is completely predicatable from where cursor is in what has been entered.
+Backspace always takes you exactly one key state back. So if in the last key state you had base locked, that's
+where you'll be. If Caps, Caps will be re-locked. If Number, Number will be re-locked.
+DONE
+
+Testing same general thing, except now backspacing by word
+
+
+---------------------------------------
+
+
+Investigate autospacing == "cap-autospaced" persisting through raw lock with Enter? Maybe?
+Maybe need to set up conditionals for raw in letter presses? Or should raw leader/lock reset autospacing? Both?
+
+Make it so that hundred, thousand, etc. do not add commas if the press that comes before the number sequence
+is a letter, capital letter, hyphen, etc. So that can do like MPE-4000 without a comma getting added.
+
+Make it so no commas added if in code mode (rather than prose mode), or if raw lock or in raw microstate
+
+Make it so that dot does not break out of Caps, just like underscore. (dot on base layer will, though = dot operator)
+
+Make new assignable key for dot on base layer. Just a normal key, does not call number formatting like dot.
+What should it be called?
+
+Hotstrings for states, countries, including all possessive forms of these. New file called proper-nouns.ahk
+
+Hotstrings for us, usa, uae, dod, af, spers, and so on. New file called abbreviations.ahk
+
+Set up q hotstrings for all @'s for work chat message drafting. New file called mentions.ahk
+
+
+*/
+
+
+
+/*
+
+Test function keys, function lock accessed from command layer
+
+Test selection layer lock as it is currently
+DONE
+
+Including with modified arrow key presses
+
+Test modifier leader and lock
+
+Action layer lock
+
+Test modified mouse clicks
+
+*/
+
+
+
+
+/*
+
+Properly do hint actuation cases, including for Tab, Enter, Actions, Space, Selections
+
+Set up jumpselect word/WORD and jumpextend to word/WORD in Emacs
+
+*/
+
+
+
+
+/*
+Adjusting genetic algorithm keyboard layout optimizers to replace all words typed with briefs with their brief form, rather than the words themselves
+
+Investigate issue that can randomly cause whole layout to lock up. See if can figure out how to consistly replicate
+
+Investigate issue that can randmoly cause characters you just typed to somehow get duplicated. See if can consistently replicate this one as well.
+
+Investigate issue that can randomly make keyboard disconnect, with some drive pop up. RJ45 cable or something?
+Reconnecting keyboard seems to fix
+*/
+
+
+; ----------------------------
+
+; lowercase_letter, uppercase_letter
+
+; DONE
 
 ; ----------------------------
 
@@ -31,7 +164,7 @@
 
 ; Allows accessing leader layers from other leader layers, basically
 
-; DONE-ish - still have to modify Python code generator and regenerate keymap
+; DONE
 
 ; ----------------------------
 
@@ -58,7 +191,7 @@
 
 ; ----------------------------
 
-; Refactor Number and Caps layers to account for having only regualr and autlocking versions of keys (no locked versions)
+; Refactor Number and Caps layers to account for having only regular and autlocking versions of keys (no locked versions)
 
 ; DONE
 
@@ -89,40 +222,53 @@
 ; Layer Keys
 ;-------------------------------------------------
 
-; leaders = ["shift", "caps", "number", "command", "function", "actions"]
+; leaders = ["shift", "caps", "number", "command", "function", "actions", "inline_styles"]
 
 shift_leader() {
+    is_leader_press := True
     leader := "shift"
     locked := "base"
     return completely_internal_key()
 }
 
 caps_leader() {
+    is_leader_press := True
     leader := "caps"
     locked := "base"
     return completely_internal_key()
 }
 
 number_leader() {
+    is_leader_press := True
     leader := "number"
     locked := "base"
     return completely_internal_key()
 }
 
 command_leader() {
+    is_leader_press := True
     leader := "command"
     locked := "base"
     return completely_internal_key()
 }
 
 function_leader() {
+    is_leader_press := True
     leader := "function"
     locked := "base"
     return completely_internal_key()
 }
 
 actions_leader() {
+    is_leader_press := True
     leader := "actions"
+    locked := "base"
+    return completely_internal_key()
+}
+
+inline_styles_leader() {
+    is_leader_press := True
+    leader := "inline_styles"
     locked := "base"
     return completely_internal_key()
 }
@@ -564,108 +710,212 @@ uppercase_z() {
     return uppercase_letter_key("Z")
 }
 
-uppercase_a_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("A")
+caps_lock_a() {
+    return caps_lock_letter_key("A")
 }
 
-uppercase_b_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("B")
+caps_lock_b() {
+    return caps_lock_letter_key("B")
 }
 
-uppercase_c_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("C")
+caps_lock_c() {
+    return caps_lock_letter_key("C")
 }
 
-uppercase_d_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("D")
+caps_lock_d() {
+    return caps_lock_letter_key("D")
 }
 
-uppercase_e_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("E")
+caps_lock_e() {
+    return caps_lock_letter_key("E")
 }
 
-uppercase_f_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("F")
+caps_lock_f() {
+    return caps_lock_letter_key("F")
 }
 
-uppercase_g_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("G")
+caps_lock_g() {
+    return caps_lock_letter_key("G")
 }
 
-uppercase_h_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("H")
+caps_lock_h() {
+    return caps_lock_letter_key("H")
 }
 
-uppercase_i_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("I")
+caps_lock_i() {
+    return caps_lock_letter_key("I")
 }
 
-uppercase_j_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("J")
+caps_lock_j() {
+    return caps_lock_letter_key("J")
 }
 
-uppercase_k_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("K")
+caps_lock_k() {
+    return caps_lock_letter_key("K")
 }
 
-uppercase_l_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("L")
+caps_lock_l() {
+    return caps_lock_letter_key("L")
 }
 
-uppercase_m_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("M")
+caps_lock_m() {
+    return caps_lock_letter_key("M")
 }
 
-uppercase_n_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("N")
+caps_lock_n() {
+    return caps_lock_letter_key("N")
 }
 
-uppercase_o_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("O")
+caps_lock_o() {
+    return caps_lock_letter_key("O")
 }
 
-uppercase_p_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("P")
+caps_lock_p() {
+    return caps_lock_letter_key("P")
 }
 
-uppercase_q_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("Q")
+caps_lock_q() {
+    return caps_lock_letter_key("Q")
 }
 
-uppercase_r_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("R")
+caps_lock_r() {
+    return caps_lock_letter_key("R")
 }
 
-uppercase_s_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("S")
+caps_lock_s() {
+    return caps_lock_letter_key("S")
 }
 
-uppercase_t_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("T")
+caps_lock_t() {
+    return caps_lock_letter_key("T")
 }
 
-uppercase_u_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("U")
+caps_lock_u() {
+    return caps_lock_letter_key("U")
 }
 
-uppercase_v_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("V")
+caps_lock_v() {
+    return caps_lock_letter_key("V")
 }
 
-uppercase_w_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("W")
+caps_lock_w() {
+    return caps_lock_letter_key("W")
 }
 
-uppercase_x_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("X")
+caps_lock_x() {
+    return caps_lock_letter_key("X")
 }
 
-uppercase_y_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("Y")
+caps_lock_y() {
+    return caps_lock_letter_key("Y")
 }
 
-uppercase_z_autolock_caps_layer() {
-    return uppercase_letter_key_autolock_caps_layer("Z")
+caps_lock_z() {
+    return caps_lock_letter_key("Z")
+}
+
+caps_lock_a_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("A")
+}
+
+caps_lock_b_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("B")
+}
+
+caps_lock_c_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("C")
+}
+
+caps_lock_d_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("D")
+}
+
+caps_lock_e_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("E")
+}
+
+caps_lock_f_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("F")
+}
+
+caps_lock_g_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("G")
+}
+
+caps_lock_h_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("H")
+}
+
+caps_lock_i_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("I")
+}
+
+caps_lock_j_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("J")
+}
+
+caps_lock_k_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("K")
+}
+
+caps_lock_l_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("L")
+}
+
+caps_lock_m_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("M")
+}
+
+caps_lock_n_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("N")
+}
+
+caps_lock_o_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("O")
+}
+
+caps_lock_p_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("P")
+}
+
+caps_lock_q_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("Q")
+}
+
+caps_lock_r_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("R")
+}
+
+caps_lock_s_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("S")
+}
+
+caps_lock_t_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("T")
+}
+
+caps_lock_u_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("U")
+}
+
+caps_lock_v_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("V")
+}
+
+caps_lock_w_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("W")
+}
+
+caps_lock_x_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("X")
+}
+
+caps_lock_y_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("Y")
+}
+
+caps_lock_z_autolock_caps_layer() {
+    return caps_lock_letter_key_autolock_caps_layer("Z")
 }
 
 ; Numbers
@@ -764,9 +1014,28 @@ nine_autolock_number_layer() {
 ; Prose Punctuation
 ;-------------------------------------------------
 
+; Cannot just use normal_key() since apostrophe needs to be a hotstring character key
 ; ASCII 39 (base 10)
 apostrophe() {
-    return normal_key("'")
+    if(modifier_state == "leader" or modifier_state == "locked") {
+        keys_to_return := build_modifier_combo("'", can_be_modified)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables("'", keys_to_return)
+    }
+    ; In AceJump flags, it is only ever the first press that
+    ; may end up a non-letter character. This is because the 
+    ; plugin uses the capitalization of the second character
+    ; (always a letter) to control its jump_selecting behavior.
+    else if(presses_left_until_hint_actuation == 2) {
+        presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
+        ; Always comes after jump key that clears sent_keys_stack
+        return hotstring_neutral_key("'", "'")
+    }
+    else {
+        autospacing := "not-autospaced"
+        keys_to_return := "'"
+        undo_keys := "{Backspace}"
+        return hotstring_character_key("'", keys_to_return, undo_keys)
+    }
 }
 
 ; ASCII 45 (base 10)
@@ -814,9 +1083,7 @@ period() {
         is_modifiers_press := (modifier_state == "leader" or modifier_state == "locked")
         is_hint_actuation_press := presses_left_until_hint_actuation > 0
         is_raw_press := (raw_state == "leader" or raw_state == "lock" or in_raw_microstate())
-        expect_autospaced_period :=  (not is_modifiers_press) and
-                                (not is_hint_actuation_press) and
-                                (not is_raw_press)
+        expect_autospaced_period :=  (not is_modifiers_press) and (not is_hint_actuation_press) and (not is_raw_press)
 
         ; Don't even do checks for ellipsis expansion unless actually going to enter
         ; a period character (as opposed to a modifier combo, etc.)
@@ -827,7 +1094,7 @@ period() {
                 one_key_back := sent_keys_stack[sent_keys_stack_length]
             }
             ; Multiple consecutive presses = transform into ellipsis *without* capitalization
-            if(one_key_back = ".") {
+            if(one_key_back == ".") {
                 autospacing := "autospaced"
                 keys_to_return := "{Backspace}" . "." . "{Space}"
                 undo_keys := "{Backspace 2}{Space}"
@@ -836,7 +1103,7 @@ period() {
             ; Multiple consecutive presses after pressing Shift Leader = transform into ellipsis *with* capitalization.
             ; Semicolon is the character on the same position as period on Shift Leader, which is why we check
             ; its value when looking at one_key_back
-            else if(one_key_back = ";") {
+            else if(one_key_back == ";") {
                 autospacing := "cap-autospaced"
                 keys_to_return := "{Backspace 2}" . ".." . "{Space}"
                 undo_keys := "{Backspace 3};{Space}"
@@ -890,7 +1157,7 @@ exclamation_mark() {
 ; ASCII 34 (base 10)
 quotes() {
     if(prose_mode_should_be_active()) {
-        return matched_pair_key("""", """", False)
+        return matched_pair_key("""", """", True, False)
     }
     ; Let text editors handle auto-pairing
     else { ; Code mode is active
@@ -900,7 +1167,7 @@ quotes() {
 
 single_quotes() {
     if(prose_mode_should_be_active()) {
-        return matched_pair_key("'", "'", False)
+        return matched_pair_key("'", "'", True, False)
     }
     ; Let text editors handle auto-pairing
     else { ; Code mode is active
@@ -911,7 +1178,7 @@ single_quotes() {
 ; ASCII 40 (base 10)
 open_parenthesis() {
     if(prose_mode_should_be_active()) {
-        return matched_pair_key("(", ")", False)
+        return matched_pair_key("(", ")", True, False)
     }
     ; Let text editors handle auto-pairing
     else { ; Code mode is active
@@ -925,15 +1192,15 @@ open_parenthesis() {
 close_parenthesis() {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(")", False)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(")", keys_to_return)
     }
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(raw_state == "leader") {
             raw_state := ""
         }
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(")")
+        return hotstring_neutral_key(")", ")")
     }
     else {
         if(manually_automatching) {
@@ -973,9 +1240,9 @@ close_parenthesis_instant_automatching() {
                 ; No leading "b" in this case
                 automatch_characters := stack_entry
             }
-            if(autospacing = "autospaced") {
+            if(autospacing == "autospaced" or autospacing == "cap-autospaced") {
                 keys_to_return := "{Backspace}"
-                Loop % automatch_characters.Length() {
+                Loop % StrLen(rm_esc_chars(automatch_characters)) {
                     keys_to_return := keys_to_return . "{Right}"
                 }
                 undo_keys := ""
@@ -983,31 +1250,15 @@ close_parenthesis_instant_automatching() {
                     keys_to_return := keys_to_return . "{Space}"
                     undo_keys := undo_keys . "{Backspace}"
                 }
-                Loop % automatch_characters.Length() {
+                Loop % StrLen(rm_esc_chars(automatch_characters)) {
                     undo_keys := undo_keys . "{Left}"
                 }
                 undo_keys := undo_keys . "{Space}"
             }
-            ; Pass through capitalization
-            else if (autospacing = "cap-autospaced") {
-                keys_to_return := "{Backspace}"
-                Loop % automatch_characters.Length() {
-                    keys_to_return := keys_to_return . "{Right}"
-                }
-                undo_keys := ""
-                if(not is_between_characters_completion) {
-                    keys_to_return := keys_to_return . "{Space}"
-                    undo_keys := undo_keys . "{Backspace}"
-                }
-                Loop % automatch_characters.Length() {
-                    undo_keys := undo_keys . "{Left}"
-                }
-                undo_keys := undo_keys . "{Space}"
-            }
-            else { ; autospacing = "not-autospaced"
+            else { ; autospacing == "not-autospaced"
                 autospacing := "autospaced"
                 keys_to_return := ""
-                Loop % automatch_characters.Length() {
+                Loop % StrLen(rm_esc_chars(automatch_characters)) {
                     keys_to_return := keys_to_return . "{Right}"
                 }
                 undo_keys := ""
@@ -1015,7 +1266,7 @@ close_parenthesis_instant_automatching() {
                     keys_to_return := keys_to_return . "{Space}"
                     undo_keys := undo_keys . "{Backspace}"
                 }
-                Loop % automatch_characters.Length() {
+                Loop % StrLen(rm_esc_chars(automatch_characters)) {
                     undo_keys := undo_keys . "{Left}"
                 }
             }
@@ -1061,28 +1312,19 @@ close_parenthesis_manual_automatching() {
             ; between_characters completion to worry about. So we can keep this function
             ; a bit simpler than the instant automatching equivalent defined above
             automatch_characters := automatching_stack.Pop()
-            if(autospacing = "autospaced") {
+            if(autospacing == "autospaced" or autospacing == "cap-autospaced") {
                 keys_to_return := "{Backspace}" . automatch_characters . "{Space}"
                 undo_keys := "{Backspace}"
-                Loop % automatch_characters.Length() {
+                Loop % StrLen(rm_esc_chars(automatch_characters)) {
                     undo_keys := undo_keys . "{Backspace}"
                 }
                 undo_keys := undo_keys . "{Space}"
             }
-            ; Pass through capitalization
-            else if (autospacing = "cap-autospaced") {
-                keys_to_return := "{Backspace}" . automatch_characters . "{Space}"
-                undo_keys := "{Backspace}"
-                Loop % automatch_characters.Length() {
-                    undo_keys := undo_keys . "{Backspace}"
-                }
-                undo_keys := undo_keys . "{Space}"
-            }
-            else { ; autospacing = "not-autospaced"
+            else { ; autospacing == "not-autospaced"
                 autospacing := "autospaced"
                 keys_to_return := automatch_characters . "{Space}"
                 undo_keys := "{Backspace}"
-                Loop % automatch_characters.Length() {
+                Loop % StrLen(rm_esc_chars(automatch_characters)) {
                     undo_keys := undo_keys . "{Backspace}"
                 }
             }
@@ -1113,7 +1355,7 @@ close_parenthesis_manual_automatching() {
 ; ASCII 91 (base 10)
 open_bracket() {
     if(prose_mode_should_be_active()) {
-        return matched_pair_key("[", "]")
+        return matched_pair_key("[", "]", True, True)
     }
     ; Let text editors handle auto-pairing
     else { ; Code mode is active
@@ -1137,16 +1379,16 @@ close_bracket() {
 dot() {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(".", can_be_modified)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables("dot", keys_to_return)
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(".")
+        return hotstring_neutral_key("dot", ".")
     }
     else {
         return number_formatter("dot", "", "")
@@ -1275,7 +1517,7 @@ backtick() {
 ; ASCII 123 (base 10)
 open_brace() {
     if(prose_mode_should_be_active()) {
-        return matched_pair_key("{{}", "{}}", False)
+        return matched_pair_key("{{}", "{}}", True, False)
     }
     ; Let text editors handle auto-pairing
     else { ; Code mode is active
@@ -1324,27 +1566,40 @@ number_lock_colon() {
 }
 
 
+str_join(separator, array_of_strings) {
+    str := ""
+    for index, item in array_of_strings
+        str .= separator . item
+    return SubStr(str, StrLen(separator) + 1)
+}
+
 add_commas_to_non_decimal_portion(non_decimal_portion) {
-    num_digits := non_decimal_portion.Length()
+    num_digits := StrLen(non_decimal_portion)
     ; With three or less digits, we don't add any commas at all
     if(num_digits <= 3) {
         return non_decimal_portion
     }
     else{
-        new_non_decimal_portion := ""
+        non_decimal_portion_with_commas := ""
+
+        ; We loop from the end of the string to the beginning, since commas are added every three
+        ; from the end, not every three from the beginning
+        offset_from_end := 1
         Loop % num_digits {
-            ; We add a comma after every third digit, unless that digit is the end of the non_decimal_portion
-            if((Mod(A_Index, 3) == 0) and (A_Index != num_digits)) {
-                new_non_decimal_portion := new_non_decimal_portion . non_decimal_portion[A_Index] . ","
+            i := (num_digits + 1) - offset_from_end
+            ; We add a comma before every third digit, unless that digit is the beginning of the non_decimal_portion
+            if((Mod(offset_from_end, 3) == 0) and (offset_from_end != num_digits)) {
+                non_decimal_portion_with_commas := "," . SubStr(non_decimal_portion, i, 1) . non_decimal_portion_with_commas
+                offset_from_end := offset_from_end + 1
             }
             else {
-                new_non_decimal_portion := new_non_decimal_portion . non_decimal_portion[A_Index]
+                non_decimal_portion_with_commas := SubStr(non_decimal_portion, i, 1) . non_decimal_portion_with_commas
+                offset_from_end := offset_from_end + 1
             }
         }
-    return new_non_decimal_portion
+    return non_decimal_portion_with_commas
     }
 }
-
 
 ; eleven thousand two hundred = 112{hundred} --> 11,200
 ; five hundred thousand = 5{hundred}{thousand} --> 500,000
@@ -1353,11 +1608,11 @@ add_commas_to_non_decimal_portion(non_decimal_portion) {
 ; This is a helper method used to do most of the number formatting
 ; If zeroes_to_add = "" this function will just add commas to
 ; the number. Otherwise, it will add zeroes, and then add commas.
-; It is smart enough to not try to add commas if a currency operation
+; It is smart enough to not mess up if a currency operation (which auto-adds commas)
 ; follows an operation that has already added commas (thousand, e.g.).
 ; It will also eat presses that don't make sense (thousand followed by
 ; billion, e.g.).
-number_formatter(operation_name, zeroes_to_add, currency_symbol_to_add) {
+number_formatter(operation_name, zeroes_to_add, currency) {
 
     ; Eat keypress if have nothing on sent_keys_stack := just moved location or whatever
     i := sent_keys_stack.Length()
@@ -1376,17 +1631,22 @@ number_formatter(operation_name, zeroes_to_add, currency_symbol_to_add) {
     ;   111.111 (both decimal and non_decimal portions, has_decimal == True)
     commas_already_added := False
     numbers := ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    includes_hundred_press := False
     has_decimal := False
     non_decimal_portion := ""
     decimal_portion := ""
     While (i >= 1) {
         stack_item := sent_keys_stack[i]
+        ;MsgBox % sent_keys_stack[i] . "`n`n" . contains(numbers, stack_item)
         if(contains(numbers, stack_item)) {
             non_decimal_portion := stack_item . non_decimal_portion
             i := i - 1
         }
         else if(stack_item == "hundred") {
-            commas_already_added := True
+            ; Commas are only added with a hundreds press if there are at least two
+            ; significant digits already. So we can't determinstically set
+            ; commas_already_added here. We have to do a check at the end (see below)
+            includes_hundred_press := True
             non_decimal_portion := "00" . non_decimal_portion
             i := i - 1
         }
@@ -1422,8 +1682,17 @@ number_formatter(operation_name, zeroes_to_add, currency_symbol_to_add) {
             i := i - 1
         }
         else {
+            ; TODO: press_before_number_sequence := stack_item
+            ; If letter, uppercase letter, caps_lock_letter, hyphen, then disable comma adding
             break
         }
+    }
+
+    ; This is where we set commas_already_added as applicable for the hundred case
+    ; We only add commas (set commas_already_added to True) if there are two or more digits
+    ; other than the zeroes (bringing the total to more than three)
+    if(includes_hundred_press and StrLen(non_decimal_portion) >= 4) {
+        commas_already_added := True
     }
 
     ; Short circuit if there are no number related presses on top of stack.
@@ -1447,7 +1716,7 @@ number_formatter(operation_name, zeroes_to_add, currency_symbol_to_add) {
 
     ; Also short circuit if we are adding a decimal point and we don't have any commas to add
     ; TODO: what if you have something like "Manual section 4200.1"? Raw dot then?
-    if((operation_name == "dot") and (not commas_already_added) and (non_decimal_portion.Length() <= 3)) {
+    if((operation_name == "dot") and (not commas_already_added) and (StrLen(non_decimal_portion) <= 3)) {
         return hotstring_inactive_delimiter_key_tracked("dot", ".", "{Backspace}")
     }
 
@@ -1471,8 +1740,11 @@ number_formatter(operation_name, zeroes_to_add, currency_symbol_to_add) {
         ; First add zeroes, if applicable
         new_decimal_portion := decimal_portion . zeroes_to_add
         ; Then add commas, if applicable
-        if(needs_commas_added) {
+        if(not commas_already_added) {
             new_non_decimal_portion := add_commas_to_non_decimal_portion(non_decimal_portion)
+        }
+        else {
+            new_non_decimal_portion := non_decimal_portion
         }
         new_number := new_non_decimal_portion . "." . new_decimal_portion
         ; Then add currency symbol, if applicable
@@ -1492,7 +1764,7 @@ number_formatter(operation_name, zeroes_to_add, currency_symbol_to_add) {
         ; First add zeroes, if applicable
         new_non_decimal_portion := non_decimal_portion . zeroes_to_add
         ; Then add commas, if applicable
-        if(needs_commas_added) {
+        if(not commas_already_added) {
             new_non_decimal_portion := add_commas_to_non_decimal_portion(new_non_decimal_portion)
         }
         ; Then add decimal point, if applicable (will be mutually exclusive with adding
@@ -1525,22 +1797,24 @@ number_formatter(operation_name, zeroes_to_add, currency_symbol_to_add) {
     ;   - Commas count. In practice this mostly comes into play with the dot operator if it 
     ;     follows like hundred, thousand, etc., since commas would already have been added in
     ;     such a case.
-    old_number_with_shared_removed := old_number
-    new_number_with_shared_removed := new_number
-    Loop % old_number.Length() {
-        if(old_number[A_Index] == new_number[A_Index]) {
-            old_number_with_shared_removed := SubStr(old_number_with_shared_removed, 2)
-            new_number_with_shared_removed := SubStr(new_number_with_shared_removed, 2)
+
+    i := 1
+    Loop % StrLen(old_number) {
+        if(SubStr(old_number, i, 1) == SubStr(new_number, i, 1)) {
+            i := i + 1
         }
         else {
             break
         }
     }
 
+    old_number_with_shared_removed := SubStr(old_number, i)
+    new_number_with_shared_removed := SubStr(new_number, i)
+
     ; For keys_to_return, we want to backspace the old number, and then send the
     ; new formatted number (with zeroes and/or commas added as applicable).
     keys_to_return := ""
-    Loop % old_number_with_shared_removed.Length() {
+    Loop % StrLen(old_number_with_shared_removed) {
         keys_to_return := keys_to_return . "{Backspace}"
     }
     keys_to_return := keys_to_return . new_number_with_shared_removed
@@ -1548,13 +1822,13 @@ number_formatter(operation_name, zeroes_to_add, currency_symbol_to_add) {
     ; For undo_keys, we want to backspace the new number, and then re-send the
     ; old number
     undo_keys := ""
-    Loop % new_number_with_shared_removed.Length() {
+    Loop % StrLen(new_number_with_shared_removed) {
         undo_keys := undo_keys . "{Backspace}"
     }
     undo_keys := undo_keys . old_number_with_shared_removed
 
     ; We don't need to be triggering hotstrings with formatting operations on numbers
-    hotstring_inactive_delimiter_key_tracked(operation_name, keys_to_return, undo_keys)
+    return hotstring_inactive_delimiter_key_tracked(operation_name, keys_to_return, undo_keys)
 }
 
 number_lock_format_with_commas() {
@@ -1599,64 +1873,64 @@ number_lock_write_out_number() {
 
 insert_bold() {
     if(prose_language == "markdown") {
-        return matched_pair_key("**", "**")
+        return matched_pair_key("**", "**", True, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("*", "*")
+        return matched_pair_key("*", "*", True, False)
     }
 }
 
 insert_italic() {
     if(prose_language == "markdown") {
-        return matched_pair_key("*", "*")
+        return matched_pair_key("*", "*", True, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("/", "/")
+        return matched_pair_key("/", "/", True, False)
     }
 }
 
 insert_bold_italic() {
     if(prose_language == "markdown") {
-        return matched_pair_key("***", "***")
+        return matched_pair_key("***", "***", True, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("*/", "/*")
+        return matched_pair_key("*/", "/*", True, False)
     }
 }
 
 insert_inline_code() {
     if(prose_language == "markdown") {
-        return matched_pair_key("``", "``")
+        return matched_pair_key("``", "``", False, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("~", "~")
+        return matched_pair_key("~", "~", False, False)
     }
 }
 
 insert_inline_latex() {
     if(prose_language == "markdown") {
-        return matched_pair_key("\( ", " \)")
+        return matched_pair_key("\( ", " \)", False, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("\( ", " \)")
+        return matched_pair_key("\( ", " \)", False, False)
     }
 }
 
 insert_strikethrough() {
     if(prose_language == "markdown") {
-        return matched_pair_key("~~", "~~")
+        return matched_pair_key("~~", "~~", True, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("+", "+")
+        return matched_pair_key("+", "+", True, False)
     }
 }
 
 insert_underline() {
     if(prose_language == "markdown") {
-        return matched_pair_key("<u>", "</u>")
+        return matched_pair_key("<u>", "</u>", True, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("_", "_")
+        return matched_pair_key("_", "_", True, False)
     }
 }
 
@@ -1674,35 +1948,35 @@ insert_verbatim() {
         return eat_keypress()
     }
     else if(prose_language == "org") {
-        return matched_pair_key("=", "=")
+        return matched_pair_key("=", "=", False, False)
     }
 }
 
 insert_link() {
     if(prose_language == "markdown") {
-        two_blank_construct("[", "](", ")")
+        return two_blank_construct("[", "](", ")", True, True)
     }
     else if(prose_language == "org") {
-        two_blank_construct("[[", "][", "]]", False)
+        return two_blank_construct("[[", "][", "]]", True, False)
     }
 }
 
 insert_footnote() {
     if(prose_language == "markdown") {
-        return matched_pair_key("[^", "]")
+        return matched_pair_key("[{^}", "]", False, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("[fn:", "]")
+        return matched_pair_key("[fn:", "]", False, False)
     }
 }
 
 ; This is a hugo shortcode I use
 insert_definition_shortcode() {
     if(prose_language == "markdown") {
-        return matched_pair_key("{{% def """, """ %}}")
+        return matched_pair_key("{{}{{}% def """, """ %{}}{}}", True, False)
     }
     else if(prose_language == "org") {
-        return matched_pair_key("{{% def """, """ %}}")
+        return matched_pair_key("{{}{{}% def """, """ %{}}{}}", True, False)
     }
 }
 
@@ -1713,7 +1987,7 @@ insert_definition_shortcode() {
 space() {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo("{Space}")
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables("{Space}", keys_to_return)
     }
     else {
         keys_to_return := ""
@@ -1730,7 +2004,7 @@ space() {
         ; in a row, however, so there is a special case for that. There
         ; is also a special case for {Enter}, so that we can add spaces
         ; at the beginning of lines
-        if(autospacing = "autospaced") {
+        if(autospacing == "autospaced") {
             ; We have to use what is essentially the "pressed_keysStack"
             ; (not that I actually track that) here, since we don't actually
             ; actually add {Space} to the sent_keys_stack in the case that we
@@ -1738,24 +2012,24 @@ space() {
             ; to check if the last key we pressed (even if it wasn't sent) was
             ; {Space}, to properly handle this conditional case.
             last_triggered_hotkey := A_PriorHotkey
-            if(last_triggered_hotkey = "*Space") {
+            if(last_triggered_hotkey == "*Space") {
                 keys_to_return := "{Space}"
                 undo_keys := "{Backspace}"
             }
             else { ; last_triggered_hotkey != "*Space", so not multiple spaces in a row
-                return hotstring_neutral_key("")
+                return eat_keypress()
             }
         }
         ; We always pass through cap autospacing. We just don't do anything unless
         ; we are adding spaces to the beginning of a new line
-        else if(autospacing = "cap-autospaced") {
+        else if(autospacing == "cap-autospaced") {
             last_triggered_hotkey := A_PriorHotkey
-            if(one_key_back = "{Enter}" or last_triggered_hotkey = "*Space") {
+            if(one_key_back == "{Enter}" or last_triggered_hotkey == "*Space") {
                 keys_to_return := "{Space}"
                 undo_keys := "{Backspace}"
             }
             else {
-                return hotstring_neutral_key("")
+                return eat_keypress()
             }
         }
         else {
@@ -1770,7 +2044,7 @@ space() {
 enter() {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo("{Enter}")
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables("{Enter}", keys_to_return)
     }
     else {
         keys_to_return := ""
@@ -1780,13 +2054,13 @@ enter() {
         if(sent_keys_stack_length >= 1) {
             one_key_back := sent_keys_stack[sent_keys_stack_length]
         }
-        if(autospacing = "autospaced") {
+        if(autospacing == "autospaced") {
             autospacing := "cap-autospaced"
             keys_to_return := "{Backspace}" . "{Enter}"
             undo_keys := "{Backspace}{Space}"
         }
-        else if(autospacing = "cap-autospaced") {
-            if(one_key_back = "{Enter}") {
+        else if(autospacing == "cap-autospaced") {
+            if(one_key_back == "{Enter}") {
                 keys_to_return := "{Enter}"
                 undo_keys := "{Backspace}"
             }
@@ -1811,14 +2085,14 @@ enter() {
 tab() {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo("{Tab}")
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables("{Tab}", keys_to_return)
     }
     else {
         ; Clears certain microstates
         in_raw_microstate := False
 
         keys_to_return := "{Tab}"
-        return hotstring_neutral_key(keys_to_return)
+        return hotstring_neutral_key("{Tab}", keys_to_return)
     }
 }
 
@@ -1834,9 +2108,9 @@ backspace() {
     keys_to_return := ""
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo("{Backspace}")
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables("{Backspace}", keys_to_return)
     }
-    else if(presses_left_until_hint_actuation = 1) { 
+    else if(presses_left_until_hint_actuation == 1) { 
         presses_left_until_hint_actuation := presses_left_until_hint_actuation + 1
         keys_to_return := "{Backspace}"
     }
@@ -1847,14 +2121,14 @@ backspace() {
         else {
             key_being_undone := sent_keys_stack.pop()
 
-            ; The autospacing needs to be set to what it was *before* the keypress being
+            ; These things need to be set to what they were *before* the keypress being
             ; undone
-            autospacing_state_history_stack.pop()
-            autospacing := autospacing_state_history_stack[autospacing_state_history_stack.Length()]
-
-            ; Same deal with the automatching
+            locked_state_history_stack.pop()
+            locked := locked_state_history_stack[locked_state_history_stack.Length()]          
             automatching_state_history_stack.pop()
             automatching_stack := automatching_state_history_stack[automatching_state_history_stack.Length()]
+            autospacing_state_history_stack.pop()
+            autospacing := autospacing_state_history_stack[autospacing_state_history_stack.Length()]
             
             keys_to_return := undo_sent_keys_stack.pop()
 
@@ -1862,8 +2136,8 @@ backspace() {
             ; work perfectly, even when backspacing is involved
 
             ; Could alternatively check if (not is_hotstring_character(key_being_undone)). That is
-            ; logically equivalent to current_brief = ""
-            if(current_brief = "") {
+            ; logically equivalent to current_brief == ""
+            if(current_brief == "") {
                 update_hotstring_state_based_on_current_sent_keys_stack()
             }
             else {
@@ -1913,7 +2187,7 @@ backspace() {
 ; TODO: make work with matchedPairStack
 internal_backspace_by_word() {
     ; Short circuit if the sent_keys_stack is empty
-    if(sent_keys_stack.Length() = 0) {
+    if(sent_keys_stack.Length() == 0) {
         return "^{Backspace}"
     }
 
@@ -2018,7 +2292,7 @@ delete() {
 escape() {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo("{Escape}")
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables("{Escape}", keys_to_return)
     }
     else {
         ; Clears certain microstates
@@ -2026,7 +2300,7 @@ escape() {
         presses_left_until_hint_actuation := 0
 
         keys_to_return := "{Escape}"
-        return hotstring_neutral_key(keys_to_return)
+        return hotstring_neutral_key("{Escape}", keys_to_return)
     }
 }
 
@@ -2039,25 +2313,25 @@ scroll_lock() {
 }
 
 cut() {
-    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("^x")
+    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("cut", "^x")
 }
 
 copy() {
-    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("^c")
+    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("copy", "^c")
 }
 
 paste_after() {
-    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("^v")
+    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("paste_after", "^v")
 }
 
 paste_before() {
-    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("^v")
+    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("paste_before", "^v")
 }
 
 undo() {
-    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("^z")
+    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("undo", "^z")
 }
 
 redo() {
-    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("^y")
+    return hotstring_trigger_action_key_untracked_reset_entry_related_variables("redo", "^y")
 }

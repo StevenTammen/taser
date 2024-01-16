@@ -5,16 +5,16 @@
 normal_key(character, can_be_modified := True) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(character, can_be_modified)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(character, keys_to_return)
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(character)
+        return hotstring_neutral_key(character, character)
     }
     else {
         autospacing := "not-autospaced"
@@ -27,16 +27,16 @@ normal_key(character, can_be_modified := True) {
 inactive_delimiter_key(character, can_be_modified := True) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(character, can_be_modified)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(character, keys_to_return)
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(character)
+        return hotstring_neutral_key(character, character)
     }
     else {
         autospacing := "not-autospaced"
@@ -49,31 +49,20 @@ inactive_delimiter_key(character, can_be_modified := True) {
 modifiable_hotstring_trigger_action_key(key) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(key)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(key, keys_to_return)
     }
     else {
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(key)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(key, key)
     }
 }
 
 modifiable_hotstring_neutral_action_key(key) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(key)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(key, keys_to_return)
     }
     else {
-        return hotstring_neutral_key(key)
-    }
-}
-
-modifiable_hotstring_trigger_shift_action_key(key) {
-    if(modifier_state == "leader" or modifier_state == "locked") {
-        keys_to_return := build_modifier_combo(key)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
-    }
-    else {
-        keys_to_return := "+" . key
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_neutral_key(key, key)
     }
 }
 
@@ -81,19 +70,19 @@ modifiable_hotstring_trigger_shift_action_key(key) {
 space_before_and_after_key(character, can_be_modified := True) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(character, can_be_modified)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(character, keys_to_return)
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(raw_state == "leader") {
             raw_state := ""
         }
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(character)
+        return hotstring_neutral_key(character, character)
     }
     else {
         keys_to_return := ""
@@ -107,16 +96,16 @@ space_before_and_after_key(character, can_be_modified := True) {
             keys_to_return := character
             undo_keys := "{Backspace}"
         }
-        else if(autospacing = "autospaced") {
+        else if(autospacing == "autospaced") {
             keys_to_return := character . "{Space}"
             undo_keys := "{Backspace 2}"
         }
-        else if (autospacing = "cap-autospaced") {
+        else if (autospacing == "cap-autospaced") {
             autospacing := "autospaced"
             keys_to_return := character . "{Space}"
             undo_keys := "{Backspace 2}"
         }
-        else { ; autospacing = "not-autospaced"
+        else { ; autospacing == "not-autospaced"
             autospacing := "autospaced"
             if(just_starting_new_entry()) {
                 keys_to_return := character . "{Space}"
@@ -135,19 +124,19 @@ space_before_and_after_key(character, can_be_modified := True) {
 space_before_key(character, can_be_modified := True) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(character, can_be_modified)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(character, keys_to_return)
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(raw_state == "leader") {
             raw_state := ""
         }
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(character)
+        return hotstring_neutral_key(character, character)
     }
     else {
         keys_to_return := ""
@@ -161,16 +150,16 @@ space_before_key(character, can_be_modified := True) {
             keys_to_return := character
             undo_keys := "{Backspace}"
         }
-        else if(autospacing = "autospaced") {
+        else if(autospacing == "autospaced") {
             keys_to_return := character
             undo_keys := "{Backspace}"
         }
-        else if (autospacing = "cap-autospaced") {
+        else if (autospacing == "cap-autospaced") {
             autospacing := "autospaced"
             keys_to_return := character
             undo_keys := "{Backspace}"
         }
-        else { ; autospacing = "not-autospaced"
+        else { ; autospacing == "not-autospaced"
             autospacing := "autospaced"
             if(just_starting_new_entry()) {
                 keys_to_return := character
@@ -189,19 +178,19 @@ space_before_key(character, can_be_modified := True) {
 space_after_key(character, can_be_modified := True) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(character, can_be_modified)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(character, keys_to_return)
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(raw_state == "leader") {
             raw_state := ""
         }
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(character)
+        return hotstring_neutral_key(character, character)
     }
     else {
         keys_to_return := ""
@@ -215,16 +204,16 @@ space_after_key(character, can_be_modified := True) {
             keys_to_return := character
             undo_keys := "{Backspace}"
         }
-        else if(autospacing = "autospaced") {
+        else if(autospacing == "autospaced") {
             keys_to_return := "{Backspace}" . character . "{Space}"
             undo_keys := "{Backspace 2}{Space}"
         }
-        else if (autospacing = "cap-autospaced") {
+        else if (autospacing == "cap-autospaced") {
             autospacing := "autospaced"
             keys_to_return := "{Backspace}" . character . "{Space}"
             undo_keys := "{Backspace 2}{Space}"
         }
-        else { ; autospacing = "not-autospaced"
+        else { ; autospacing == "not-autospaced"
             autospacing := "autospaced"
             keys_to_return := character . "{Space}"
             undo_keys := "{Backspace 2}"
@@ -233,42 +222,45 @@ space_after_key(character, can_be_modified := True) {
     }
 }
 
-lowercase_letter_key(lowercaseLetter, uppercaseLetter) {
+lowercase_letter_key(lowercase_letter, uppercase_letter) {
     if(modifier_state == "leader" or modifier_state == "locked") {
-        keys_to_return := build_modifier_combo(lowerCaseLetter)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        keys_to_return := build_modifier_combo(lowercase_letter)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(lowercase_letter, keys_to_return)
     }
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(lowercaseLetter)
+        return hotstring_neutral_key(lowercase_letter, lowercase_letter)
     }
-    else if(presses_left_until_hint_actuation = 1) {
+    else if(presses_left_until_hint_actuation == 1) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(jump_selecting) {
             ; Always comes after jump key that clears sent_keys_stack
-            return hotstring_neutral_key(uppercaseLetter)
+            return hotstring_neutral_key(uppercase_letter, uppercase_letter)
         }
         else { ; Just jumping, not selecting
             ; Always comes after jump key that clears sent_keys_stack
-            return hotstring_neutral_key(lowercaseLetter)
+            return hotstring_neutral_key(lowercase_letter, lowercase_letter)
         }
     }
     else {
         keys_to_return := ""
         undo_keys := "{Backspace}"
-        if(autospacing = "cap-autospaced"){
-            keys_to_return := uppercaseLetter 
+        if(autospacing == "cap-autospaced"){
+            keys_to_return := uppercase_letter 
         }
         else {
-            keys_to_return := lowercaseLetter
+            keys_to_return := lowercase_letter
         }
         autospacing := "not-autospaced"
         return hotstring_character_key(keys_to_return, keys_to_return, undo_keys)
     }
 }
 
-uppercase_letter_key(uppercaseLetter) {
+; Shift Leader = uppercase_a()
+; Caps Leader = caps_lock_a_autolock_caps_layer()
+; Caps Lock = caps_lock_a()
+uppercase_letter_key(uppercase_letter) {
     ; "Eat" modifier presses, since they aren't expected for uppercase letters
     if(modifier_state == "leader" or modifier_state == "locked") {
         return ""
@@ -276,45 +268,61 @@ uppercase_letter_key(uppercaseLetter) {
     else if(presses_left_until_hint_actuation > 0) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(uppercaseLetter)
+        return hotstring_neutral_key(uppercase_letter, uppercase_letter)
     }
     else {
         undo_keys := "{Backspace}"
         autospacing := "not-autospaced"
-        return hotstring_character_key(uppercaseLetter, uppercaseLetter, undo_keys)
+        return hotstring_character_key(uppercase_letter, uppercase_letter, undo_keys)
     }
 }
 
-; one()
-; one_autolock_number_layer()
-
-; uppercase_a()
-; uppercase_a_autolock_caps_layer()
-
-
-uppercase_letter_key_autolock_caps_layer(uppercaseLetter) {
-    ; "Eat" modifier presses, since they aren't expected for uppercase letters
+caps_lock_letter_key(uppercase_letter) {
+    ; "Eat" modifier presses, since they aren't expected for caps lock letters
     if(modifier_state == "leader" or modifier_state == "locked") {
         return ""
     }
     else if(presses_left_until_hint_actuation > 0) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(uppercaseLetter)
+        return hotstring_neutral_key(uppercase_letter, uppercase_letter)
+    }
+    else {
+        pressed_key := "caps_lock_" . uppercase_letter
+        keys_to_return := uppercase_letter
+        undo_keys := "{Backspace}"
+        autospacing := "not-autospaced"
+        return hotstring_character_key(pressed_key, keys_to_return, undo_keys)
+    }
+}
+
+caps_lock_letter_key_autolock_caps_layer(uppercase_letter) {
+    ; "Eat" modifier presses, since they aren't expected for caps lock letters
+    if(modifier_state == "leader" or modifier_state == "locked") {
+        return ""
+    }
+    else if(presses_left_until_hint_actuation > 0) {
+        presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
+        ; Always comes after jump key that clears sent_keys_stack
+        return hotstring_neutral_key(uppercase_letter, uppercase_letter)
     }
     else {
         ; This line is the difference
         locked := "caps"
+        pressed_key := "caps_lock_" . uppercase_letter
+        keys_to_return := uppercase_letter
         undo_keys := "{Backspace}"
         autospacing := "not-autospaced"
-        return hotstring_character_key(uppercaseLetter, uppercaseLetter, undo_keys)
+        return hotstring_character_key(pressed_key, keys_to_return, undo_keys)
     }
 }
 
+; Number Leader = one_autolock_number_layer()
+; Number Lock = one()
 number_key(num) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(num)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(num, keys_to_return)
     }
     else {
         keys_to_return := num
@@ -327,7 +335,7 @@ number_key(num) {
 number_key_autolock_number_layer(num) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(num)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(num, keys_to_return)
     }
     else {
         ; This line is the difference
@@ -343,19 +351,19 @@ number_key_autolock_number_layer(num) {
 no_cap_punctuation_key(character, can_be_modified := True) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(character, can_be_modified)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(character, keys_to_return)
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(raw_state == "leader") {
             raw_state := ""
         }
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(character)
+        return hotstring_neutral_key(character, character)
     }
     else {
         keys_to_return := ""
@@ -372,18 +380,18 @@ no_cap_punctuation_key(character, can_be_modified := True) {
         ; This case happens when you pass through capitalization after quotes,
         ; for example. So like the sequence "Some question?" followed by a
         ; comma keypress
-        else if(autospacing = "cap-autospaced") {
+        else if(autospacing == "cap-autospaced") {
             autospacing := "autospaced"
             keys_to_return := "{Backspace}" . character . "{Space}"
             undo_keys := "{Backspace 2}{Space}"
 
         }
         ; This case happens after quotes and numbers, for example
-        else if(autospacing = "autospaced") {
+        else if(autospacing == "autospaced") {
             keys_to_return := "{Backspace}" . character . "{Space}"
             undo_keys := "{Backspace 2}{Space}"
         } 
-        else { ; autospacing = "not-autospaced"
+        else { ; autospacing == "not-autospaced"
             autospacing := "autospaced"
             keys_to_return := character . "{Space}"
             undo_keys := "{Backspace 2}"
@@ -396,19 +404,19 @@ no_cap_punctuation_key(character, can_be_modified := True) {
 cap_punctuation_key(character, can_be_modified := True) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         keys_to_return := build_modifier_combo(character, can_be_modified)
-        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+        return hotstring_trigger_action_key_untracked_reset_entry_related_variables(character, keys_to_return)
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         presses_left_until_hint_actuation := presses_left_until_hint_actuation - 1
         if(raw_state == "leader") {
             raw_state := ""
         }
         ; Always comes after jump key that clears sent_keys_stack
-        return hotstring_neutral_key(character)
+        return hotstring_neutral_key(character, character)
     }
     else {
         keys_to_return := ""
@@ -425,17 +433,17 @@ cap_punctuation_key(character, can_be_modified := True) {
         ; This case happens when you pass through capitalization after quotes,
         ; for example. So like the sequence "Some question?" followed by a
         ; period keypress
-        else if(autospacing = "cap-autospaced") {
+        else if(autospacing == "cap-autospaced") {
             keys_to_return := "{Backspace}" . character . "{Space}"
             undo_keys := "{Backspace 2}{Space}"
         }
         ; This case happens after quotes and numbers, for example
-        else if(autospacing = "autospaced") {
+        else if(autospacing == "autospaced") {
             autospacing := "cap-autospaced"
             keys_to_return := "{Backspace}" . character . "{Space}"
             undo_keys := "{Backspace 2}{Space}"
         } 
-        else { ; autospacing = "not-autospaced"
+        else { ; autospacing == "not-autospaced"
             autospacing := "cap-autospaced"
             keys_to_return := character . "{Space}"
             undo_keys := "{Backspace 2}"
@@ -444,22 +452,22 @@ cap_punctuation_key(character, can_be_modified := True) {
     }
 }
 
-matched_pair_key(opening_characters, closing_characters, can_be_modified := True) {
+matched_pair_key(opening_characters, closing_characters, pass_through_capitalization, can_be_modified) {
     if(modifier_state == "leader" or modifier_state == "locked") {
-        if (opening_characters.Length() > 1) {
+        if (StrLen(opening_characters) > 1) {
             return eat_keypress()
         }
         else {
             keys_to_return := build_modifier_combo(opening_characters, can_be_modified)
-            return hotstring_trigger_action_key_untracked_reset_entry_related_variables(keys_to_return)
+            return hotstring_trigger_action_key_untracked_reset_entry_related_variables(opening_characters, keys_to_return)
         }
     }
     ; In AceJump flags, it is only ever the first press that
     ; may end up a non-letter character. This is because the 
     ; plugin uses the capitalization of the second character
     ; (always a letter) to control its jump_selecting behavior.
-    else if(presses_left_until_hint_actuation = 2) {
-        if (opening_characters.Length() > 1) {
+    else if(presses_left_until_hint_actuation == 2) {
+        if (StrLen(opening_characters) > 1) {
             return eat_keypress()
         }
         else {
@@ -468,26 +476,26 @@ matched_pair_key(opening_characters, closing_characters, can_be_modified := True
                 raw_state := ""
             }
             ; Always comes after jump key that clears sent_keys_stack
-            return hotstring_neutral_key(opening_characters)
+            return hotstring_neutral_key(opening_characters, opening_characters)
         }
     }
     else {
         if(manually_automatching) {
-            return matched_pair_key_manual_automatching(opening_characters, closing_characters)
+            return matched_pair_key_manual_automatching(opening_characters, closing_characters, pass_through_capitalization)
         }
         else {
-            return matched_pair_key_instant_automatching(opening_characters, closing_characters)
+            return matched_pair_key_instant_automatching(opening_characters, closing_characters, pass_through_capitalization)
         }
     }
 }
 
-matched_pair_key_instant_automatching(opening_characters, closing_characters) {
+matched_pair_key_instant_automatching(opening_characters, closing_characters, pass_through_capitalization) {
     keys_to_return := ""
     undo_keys := ""
     if(raw_state == "leader") {
         keys_to_return := opening_characters
         undo_keys := ""
-        Loop % opening_characters.Length() {
+        Loop % StrLen(rm_esc_chars(opening_characters)) {
             undo_keys := undo_keys . "{Backspace}"
         }
         raw_state := ""
@@ -495,66 +503,70 @@ matched_pair_key_instant_automatching(opening_characters, closing_characters) {
     else if((raw_state == "lock") or in_raw_microstate()) {
         keys_to_return := opening_characters
         undo_keys := ""
-        Loop % opening_characters.Length() {
+        Loop % StrLen(rm_esc_chars(opening_characters)) {
             undo_keys := undo_keys . "{Backspace}"
         }
     }
     ; Capitalization is "passed through" matched pair characters like opening quotes
-    else if(autospacing = "autospaced" or autospacing = "cap-autospaced") {
+    else if(autospacing == "autospaced" or autospacing == "cap-autospaced") {
+        if(not pass_through_capitalization) {
+            autospacing := "autospaced"
+        }
         keys_to_return := opening_characters . closing_characters
-        Loop % closing_characters.Length() {
+        Loop % StrLen(rm_esc_chars(closing_characters)) {
             keys_to_return := keys_to_return . "{Left}"
         }
         automatching_stack.Push(closing_characters)
         undo_keys := ""
-        Loop % closing_characters.Length() {
+        Loop % StrLen(rm_esc_chars(closing_characters)) {
             undo_keys := undo_keys . "{Delete}"
         } 
-        Loop % opening_characters.Length() {
+        Loop % StrLen(rm_esc_chars(opening_characters)) {
             undo_keys := undo_keys . "{Backspace}"
         }
     }
-    else { ; autospacing = "not-autospaced"
+    else { ; autospacing == "not-autospaced"
         autospacing := "autospaced"
         automatching_stack.Push(closing_characters)
         if(just_starting_new_entry()) {
             keys_to_return := opening_characters . closing_characters
-            Loop % closing_characters.Length() {
+            Loop % StrLen(rm_esc_chars(closing_characters)) {
                 keys_to_return := keys_to_return . "{Left}"
             }
             undo_keys := ""
-            Loop % closing_characters.Length() {
+            Loop % StrLen(rm_esc_chars(closing_characters)) {
                 undo_keys := undo_keys . "{Delete}"
             } 
-            Loop % opening_characters.Length() {
+            Loop % StrLen(rm_esc_chars(opening_characters)) {
                 undo_keys := undo_keys . "{Backspace}"
             }
         }
         else {
             keys_to_return := "{Space}" . opening_characters . closing_characters
-            Loop % closing_characters.Length() {
+            Loop % StrLen(rm_esc_chars(closing_characters)) {
                 keys_to_return := keys_to_return . "{Left}"
             }
+            
             undo_keys := ""
-            Loop % closing_characters.Length() {
+            Loop % StrLen(rm_esc_chars(closing_characters)) {
                 undo_keys := undo_keys . "{Delete}"
             } 
-            Loop % opening_characters.Length() {
+            Loop % StrLen(rm_esc_chars(opening_characters)) {
                 undo_keys := undo_keys . "{Backspace}"
             }
             undo_keys := undo_keys . "{Backspace}"
         }
     }
-    return hotstring_trigger_delimiter_key_tracked(opening_character, keys_to_return, undo_keys)
+    return hotstring_trigger_delimiter_key_tracked(opening_characters, keys_to_return, undo_keys)
 }
 
-matched_pair_key_manual_automatching(opening_characters, closing_characters) {
+matched_pair_key_manual_automatching(opening_characters, closing_characters, pass_through_capitalization) {
     keys_to_return := ""
     undo_keys := ""
     if(raw_state == "leader") {
         keys_to_return := opening_characters
         undo_keys := ""
-        Loop % opening_characters.Length() {
+        Loop % StrLen(rm_esc_chars(opening_characters)) {
             undo_keys := undo_keys . "{Backspace}"
         }
         raw_state := ""
@@ -562,46 +574,49 @@ matched_pair_key_manual_automatching(opening_characters, closing_characters) {
     else if((raw_state == "lock") or in_raw_microstate()) {
         keys_to_return := opening_characters
         undo_keys := ""
-        Loop % opening_characters.Length() {
+        Loop % StrLen(rm_esc_chars(opening_characters)) {
             undo_keys := undo_keys . "{Backspace}"
         }
     }
     ; Capitalization is "passed through" matched pair characters like opening quotes
-    else if(autospacing = "autospaced" or autospacing = "cap-autospaced") {
+    else if(autospacing == "autospaced" or autospacing == "cap-autospaced") {
+        if(not pass_through_capitalization) {
+            autospacing := "autospaced"
+        }
         keys_to_return := opening_characters
         automatching_stack.Push(closing_characters)
         undo_keys := ""
-        Loop % opening_characters.Length() {
+        Loop % StrLen(rm_esc_chars(opening_characters)) {
             undo_keys := undo_keys . "{Backspace}"
         }
     }
-    else { ; autospacing = "not-autospaced"
+    else { ; autospacing == "not-autospaced"
         autospacing := "autospaced"
         automatching_stack.Push(closing_characters)
         if(just_starting_new_entry()) {
             keys_to_return := opening_characters
             undo_keys := ""
-            Loop % opening_characters.Length() {
+            Loop % StrLen(rm_esc_chars(opening_characters)) {
                 undo_keys := undo_keys . "{Backspace}"
             }
         }
         else {
             keys_to_return := "{Space}" . opening_characters
             undo_keys := ""
-            Loop % opening_characters.Length() {
+            Loop % StrLen(rm_esc_chars(opening_characters)) {
                 undo_keys := undo_keys . "{Backspace}"
             }
             undo_keys := undo_keys . "{Backspace}"
         }
     }
-    return hotstring_trigger_delimiter_key_tracked(opening_character, keys_to_return, undo_keys)
+    return hotstring_trigger_delimiter_key_tracked(opening_characters, keys_to_return, undo_keys)
 }
 
-two_blank_construct(opening_characters, between_characters, closing_characters, is_completed_in_forward_direction := True) {
+two_blank_construct(opening_characters, between_characters, closing_characters, pass_through_capitalization, is_completed_in_forward_direction) {
     if(modifier_state == "leader" or modifier_state == "locked") {
         return eat_keypress()
     }
-    else if(presses_left_until_hint_actuation = 2) {
+    else if(presses_left_until_hint_actuation == 2) {
         return eat_keypress()
     }
     else {
@@ -620,11 +635,11 @@ two_blank_construct(opening_characters, between_characters, closing_characters, 
             ;   Markdown link: [Link text](Link address)
             ;   Org link: [[Link address][Link text]]
             if(is_completed_in_forward_direction) {
-                return two_blank_construct_instant_automatching_forward_completion(opening_characters, between_characters, closing_characters)
+                return two_blank_construct_instant_automatching_forward_completion(opening_characters, between_characters, closing_characters, pass_through_capitalization)
             }
             else {
                 ; TODO
-                empty_press()
+                eat_keypress()
             }
         }
     }
@@ -632,7 +647,7 @@ two_blank_construct(opening_characters, between_characters, closing_characters, 
 
 ; TODO: make it handle tabs for indentation when going from opening_characters to between_characters
 ; and when going from between_characters to closing_characters
-two_blank_construct_instant_automatching_forward_fill(opening_characters, between_characters, closing_characters) {
+two_blank_construct_instant_automatching_forward_completion(opening_characters, between_characters, closing_characters, pass_through_capitalization) {
     keys_to_return := ""
     undo_keys := ""
     if(raw_state == "leader") {
@@ -641,14 +656,17 @@ two_blank_construct_instant_automatching_forward_fill(opening_characters, betwee
     else if((raw_state == "lock") or in_raw_microstate()) {
         eat_keypress()
     }
-    ; Capitalization is "passed through" two blank constructs like links
-    else if(autospacing = "autospaced" or autospacing = "cap-autospaced") {
+    ; Capitalization can be passed through, just as with matched pairs
+    else if(autospacing == "autospaced" or autospacing == "cap-autospaced") {
+        if(not pass_through_capitalization) {
+            autospacing := "autospaced"
+        }
         keys_to_return := opening_characters . between_characters . closing_characters
-        Loop % closing_characters.Length() {
+        Loop % StrLen(rm_esc_chars(closing_characters)) {
             keys_to_return := keys_to_return . "{Left}"
         }
         automatching_stack.Push(closing_characters)
-        Loop % between_characters.Length() {
+        Loop % StrLen(rm_esc_chars(between_characters)) {
             keys_to_return := keys_to_return . "{Left}"
         }
         ; Add a "b" to the front of between_characters stuck on the automatching stack.
@@ -657,26 +675,26 @@ two_blank_construct_instant_automatching_forward_fill(opening_characters, betwee
         ; any trailing spaces sent when we press ), unlike with closing_characters
         automatching_stack.Push("b" . between_characters)
         undo_keys := ""
-        Loop % between_characters.Length() {
+        Loop % StrLen(rm_esc_chars(between_characters)) {
             undo_keys := undo_keys . "{Delete}"
         } 
-        Loop % closing_characters.Length() {
+        Loop % StrLen(rm_esc_chars(closing_characters)) {
             undo_keys := undo_keys . "{Delete}"
         } 
-        Loop % opening_characters.Length() {
+        Loop % StrLen(rm_esc_chars(opening_characters)) {
             undo_keys := undo_keys . "{Backspace}"
         }
     }
-    else { ; autospacing = "not-autospaced"
+    else { ; autospacing == "not-autospaced"
         autospacing := "autospaced"
         automatching_stack.Push(closing_characters)
         if(just_starting_new_entry()) {
             keys_to_return := opening_characters . between_characters . closing_characters
-            Loop % closing_characters.Length() {
+            Loop % StrLen(rm_esc_chars(closing_characters)) {
                 keys_to_return := keys_to_return . "{Left}"
             }
             automatching_stack.Push(closing_characters)
-            Loop % between_characters.Length() {
+            Loop % StrLen(rm_esc_chars(between_characters)) {
                 keys_to_return := keys_to_return . "{Left}"
             }
             ; Add a "b" to the front of between_characters stuck on the automatching stack.
@@ -685,23 +703,23 @@ two_blank_construct_instant_automatching_forward_fill(opening_characters, betwee
             ; any trailing spaces sent when we press ), unlike with closing_characters
             automatching_stack.Push("b" . between_characters)
             undo_keys := ""
-            Loop % between_characters.Length() {
+            Loop % StrLen(rm_esc_chars(between_characters)) {
                 undo_keys := undo_keys . "{Delete}"
             } 
-            Loop % closing_characters.Length() {
+            Loop % StrLen(rm_esc_chars(closing_characters)) {
                 undo_keys := undo_keys . "{Delete}"
             } 
-            Loop % opening_characters.Length() {
+            Loop % StrLen(rm_esc_chars(opening_characters)) {
                 undo_keys := undo_keys . "{Backspace}"
             }
         }
         else {
             keys_to_return := "{Space}" . opening_characters . between_characters . closing_characters
-            Loop % closing_characters.Length() {
+            Loop % StrLen(rm_esc_chars(closing_characters)) {
                 keys_to_return := keys_to_return . "{Left}"
             }
             automatching_stack.Push(closing_characters)
-            Loop % between_characters.Length() {
+            Loop % StrLen(rm_esc_chars(between_characters)) {
                 keys_to_return := keys_to_return . "{Left}"
             }
             ; Add a "b" to the front of between_characters stuck on the automatching stack.
@@ -710,17 +728,17 @@ two_blank_construct_instant_automatching_forward_fill(opening_characters, betwee
             ; any trailing spaces sent when we press ), unlike with closing_characters
             automatching_stack.Push("b" . between_characters)
             undo_keys := ""
-            Loop % between_characters.Length() {
+            Loop % StrLen(rm_esc_chars(between_characters)) {
                 undo_keys := undo_keys . "{Delete}"
             } 
-            Loop % closing_characters.Length() {
+            Loop % StrLen(rm_esc_chars(closing_characters)) {
                 undo_keys := undo_keys . "{Delete}"
             } 
-            Loop % opening_characters.Length() {
+            Loop % StrLen(rm_esc_chars(opening_characters)) {
                 undo_keys := undo_keys . "{Backspace}"
             }
             undo_keys := undo_keys . "{Backspace}"
         }
     }
-    return hotstring_trigger_delimiter_key_tracked(opening_character, keys_to_return, undo_keys)
+    return hotstring_trigger_delimiter_key_tracked(opening_characters, keys_to_return, undo_keys)
 }
