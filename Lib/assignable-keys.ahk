@@ -2123,8 +2123,9 @@ backspace() {
 
             ; These things need to be set to what they were *before* the keypress being
             ; undone
+            ; Have to handle case that is the case of length = 1
             locked_state_history_stack.pop()
-            locked := locked_state_history_stack[locked_state_history_stack.Length()]          
+            locked := locked_state_history_stack[locked_state_history_stack.Length()]       
             automatching_state_history_stack.pop()
             automatching_stack := automatching_state_history_stack[automatching_state_history_stack.Length()]
             autospacing_state_history_stack.pop()
