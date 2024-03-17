@@ -17,6 +17,7 @@ Keyboards with at least 3x6 and having at least three thumb keys in an arc on th
 - [MoErgo Glove80](https://www.moergo.com/collections/glove80-keyboards/products/glove80-split-ergonomic-keyboard-revision-2)
   - Extra number row
   - Extra function row
+  - Extra bottom row
   - Extra thumb keys on each side. If you disagree with my reasoning for only using three large thumb keys (and think there ought to be be more smaller thumb keys that require greater precision to actuate), then this is a good concave keyboard with many such thumb keys.
 - [Dygma Defy](https://dygma.com/products/dygma-defy)
   - Flat (no concave keywells to reduce travel distance). On the one hand, this is not as ideal from a purely functional perspective. On the other hand, it makes transporting it when traveling much easier.
@@ -32,13 +33,15 @@ Keyboards with at least 3x6 and having at least three thumb keys in an arc on th
   - Extra thumb key on each side
   - Gimmicky materials and design (form over function), in my opinion, adding to expense unnecessarily.
  
-### Semi-compaitlbe keybaords
+### Semi-compatible keyboards
 
 These mostly have suboptimal thumb clusters (i.e., some configuration other than having at least three keys in an arc), but could probably work if you wanted them to.
 
 - [Kinesis Advantage 360](https://kinesis-ergo.com/keyboards/advantage360/)
   - Has three reasonably accessible thumb keys, just not quite ideally arranged
   - Extra number row
+  - Extra function row
+  - Extra bottom row
   - Extra thumb keys
 - [Keeb.io Iris](https://keeb.io/collections/pre-built-keyboards/products/iris-essential-model-2-keyboard)
   - Flat (no concave keywells to reduce travel distance). On the one hand, this is not as ideal from a purely functional perspective. On the other hand, it makes transporting it when traveling much easier.
