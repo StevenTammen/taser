@@ -40,7 +40,6 @@ These mostly have suboptimal thumb clusters (i.e., some configuration other than
 - [Kinesis Advantage 360](https://kinesis-ergo.com/keyboards/advantage360/)
   - Has three reasonably accessible thumb keys, just not quite ideally arranged
   - Extra number row
-  - Extra function row
   - Extra bottom row
   - Extra thumb keys
 - [Keeb.io Iris](https://keeb.io/collections/pre-built-keyboards/products/iris-essential-model-2-keyboard)
